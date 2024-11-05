@@ -1,1 +1,1 @@
-# WEB SERVER API Serabut Inn
+# WEB Server API Serabut Inn
