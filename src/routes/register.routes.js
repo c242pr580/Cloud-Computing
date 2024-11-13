@@ -5,6 +5,8 @@ module.exports = [
         method: 'POST',
         path: '/register',
         handler: registerHandler,
-        options: { auth: false },
+        options: {
+            auth: false
+        }
     },
 ];

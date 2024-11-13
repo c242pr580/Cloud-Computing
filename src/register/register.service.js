@@ -6,11 +6,11 @@ const registerUser = async (userData) => {
     const { username, email, password, location, name, phone, role_id } = userData;
 
     if (await userModule.findUserByUsername(username)) {
-        throw new Error('The username you entered is already exists. Please choose another.');
+        throw new Error('The username you entered is already exists, Please choose another.');
     }
     
     if (await userModule.findUserByEmail(email)) {
-        throw new Error('The email address is already exists. Please use a different email address.');
+        throw new Error('The email address is already exists, Please use a different email address.');
     }
  
     if (password.length < 8) {
