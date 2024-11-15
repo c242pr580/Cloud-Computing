@@ -1,5 +1,4 @@
 const firestore = require('../server/firebase');
-
 const userCollection = firestore.collection('users');
 
 const addUser = async (userData) => {

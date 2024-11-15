@@ -19,9 +19,17 @@ const loginUser = async ({ email, password }) => {
         throw new Error('Password must be at least 8 characters.');
     }
 
-    const token = jwt.sign({ userId: user.user_id, role: user.role_id }, JWT_SECRET, {
-        expiresIn: JWT_EXPIRES_IN,
-    });
+    const token = jwt.sign(
+        { 
+            userId: user.user_id,
+            role: user.role_id
+        }, 
+        JWT_SECRET, 
+        { 
+            algorithm: 'HS256',
+            expiresIn: JWT_EXPIRES_IN 
+        }
+    );
 
     return {
         token,

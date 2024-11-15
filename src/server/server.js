@@ -4,6 +4,7 @@ const Jwt = require('@hapi/jwt');
 const validate = require('./validate');
 const registerRoutes = require('../routes/register.routes');
 const loginRoutes = require('../routes/login.routes');
+const userRoutes = require('../routes/user.routes');
 
 (async () => {
     const server = Hapi.server({
@@ -17,20 +18,23 @@ const loginRoutes = require('../routes/login.routes');
     });
 
     await server.register(Jwt);
+
     server.auth.strategy('jwt', 'jwt', {
-        keys: process.env.JWT_SECRET,
-        validate,                    
-        verify: {                    
-            aud: process.env.JWT_AUD,
-            iss: process.env.JWT_ISS,
-            sub: process.env.JWT_SUB,
-        }
+        keys: process.env.JWT_SECRET, 
+        verify:{
+            aud: false, 
+            iss: false,
+            sub: false
+        },
+        validate
     });
+
 
     server.auth.default('jwt');
 
     server.route(registerRoutes);
     server.route(loginRoutes);
+    server.route(userRoutes);
 
     await server.start();
     console.log(`Server start on ${server.info.uri}`);

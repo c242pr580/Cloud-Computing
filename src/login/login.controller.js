@@ -1,4 +1,4 @@
-const loginService = require('./login.service');
+const loginService = require('../login/login.service');
 const Boom = require('@hapi/boom');
 
 const loginHandler = async (request, h) => {
