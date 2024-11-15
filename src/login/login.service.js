@@ -7,16 +7,12 @@ const loginUser = async ({ email, password }) => {
    
     const user = await userModule.findUserByEmail(email);
     if (!user) {
-        throw new Error('No user found with this email, Please check your email or sign up.');
+        throw new Error('User Not Found, Please check your email or sign up.');
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
         throw new Error('Incorrect password, Please check your password and try again.');
-    }
-
-    if (isPasswordValid.length < 8) {
-        throw new Error('Password must be at least 8 characters.');
     }
 
     const token = jwt.sign(
