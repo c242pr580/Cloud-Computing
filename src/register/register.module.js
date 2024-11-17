@@ -1,10 +1,17 @@
 const firestore = require('../server/firebase');
 const userCollection = firestore.collection('users');
+const customersCollection = firestore.collection('customers');
 
 const addUser = async (userData) => {
     const userRef = userCollection.doc(userData.user_id);
     await userRef.set(userData);
     return { id: userRef.id, ...userData };
+};
+
+const addCustomer = async (customerData) => {
+    const customerRef = customersCollection.doc(customerData.customer_id);
+    await customerRef.set(customerData);
+    return { id: customerRef.id, ...customerData };
 };
 
 const findUserByUsername = async (username) => {
@@ -21,4 +28,5 @@ module.exports = {
     addUser,
     findUserByUsername,
     findUserByEmail,
+    addCustomer
 };

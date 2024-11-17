@@ -1,6 +1,5 @@
 const userService = require('../user/user.service');
 const Boom = require('@hapi/boom');
-const path = require('path');
 const { uploadFileToCloudStorage } = require('../server/storage');
 
 const getUserBiodataHandler = async (request, h) => {
@@ -116,4 +115,7 @@ const updateUserBiodataHandler = async (request, h) => {
     }
 };
 
-module.exports = { getUserBiodataHandler,updateUserBiodataHandler };
+module.exports = {
+    getUserBiodataHandler,
+    updateUserBiodataHandler
+};

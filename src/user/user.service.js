@@ -1,5 +1,4 @@
 const userModule = require('../user/user.module');
-const db = require('../server/firebase');
 
 const getUserBiodata = async (userId) => {
     const user = await userModule.findUserById(userId);

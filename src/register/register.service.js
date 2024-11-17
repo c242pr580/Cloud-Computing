@@ -3,8 +3,13 @@ const crypto = require('crypto');
 const userModule = require('../register/register.module');
 
 const registerUser = async (userData) => {
-    const { username, email, password, location, name, phone, role_id } = userData;
+    const { username, email, password, location, name, phone } = userData;
 
+    let role_id = parseInt(userData.role_id, 10);
+
+    if (![1, 2].includes(role_id)) {
+        throw new Error('Invalid role id, Please provide a valid role (1 for customer, 2 for mitra).');
+    }
     if (await userModule.findUserByUsername(username)) {
         throw new Error('The username you entered is already exists, Please choose another.');
     }
@@ -17,7 +22,7 @@ const registerUser = async (userData) => {
         throw new Error('Password must be at least 8 characters long.');
     }
 
-    const id = crypto.randomUUID();
+    const id = `user-${crypto.randomUUID()}`;
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = {
@@ -34,6 +39,14 @@ const registerUser = async (userData) => {
     };
 
     await userModule.addUser(newUser);
+
+    if (role_id === 1) {
+        const newCustomer = {
+            customer_id: `customer-${crypto.randomUUID()}`,
+            user_id: id,
+        };
+        await userModule.addCustomer(newCustomer);
+    }
 };
 
 module.exports = {

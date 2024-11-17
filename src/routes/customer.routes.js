@@ -1,4 +1,6 @@
-const { verifyRole } = require('../middleware/role.middleware');
+// const { verifyRole } = require('../middleware/role.middleware');
+const { verifyCustomer } = require('../middleware/customer.middleware');
+
 
 module.exports = [
     {
@@ -7,7 +9,8 @@ module.exports = [
         // handler: loginHandler,
         options: {
             auth: 'jwt',
-            pre: [verifyRole(1)],
+            pre: [verifyCustomer],
+            // pre: [verifyRole(1)],
         },
         handler: (request, h) => {
             return { message: 'Welcome to the customer dashboard!' };

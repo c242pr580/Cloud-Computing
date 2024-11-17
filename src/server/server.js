@@ -2,10 +2,12 @@ require('dotenv').config();
 const Hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
 const validate = require('./validate');
+const Boom = require('@hapi/boom');
 const registerRoutes = require('../routes/register.routes');
 const loginRoutes = require('../routes/login.routes');
 const userRoutes = require('../routes/user.routes');
 const customerRoutes = require('../routes/customer.routes');
+const mitraRoutes = require('../routes/mitra.routes');
 
 (async () => {
     const server = Hapi.server({
@@ -19,6 +21,7 @@ const customerRoutes = require('../routes/customer.routes');
     });
 
     await server.register(Jwt);
+
 
     server.auth.strategy('jwt', 'jwt', {
         keys: process.env.JWT_SECRET, 
@@ -37,6 +40,18 @@ const customerRoutes = require('../routes/customer.routes');
     server.route(loginRoutes);
     server.route(userRoutes);
     server.route(customerRoutes);
+    server.route(mitraRoutes);
+
+    server.route({
+        method: '*',
+        path: '/{any*}',
+        options: {
+            auth: false
+        },
+        handler: (request, h) => {
+            return Boom.notFound('404 Not found');
+        }
+    });
 
     await server.start();
     console.log(`Server start on ${server.info.uri}`);
