@@ -5,6 +5,7 @@ const validate = require('./validate');
 const registerRoutes = require('../routes/register.routes');
 const loginRoutes = require('../routes/login.routes');
 const userRoutes = require('../routes/user.routes');
+const customerRoutes = require('../routes/customer.routes');
 
 (async () => {
     const server = Hapi.server({
@@ -35,6 +36,7 @@ const userRoutes = require('../routes/user.routes');
     server.route(registerRoutes);
     server.route(loginRoutes);
     server.route(userRoutes);
+    server.route(customerRoutes);
 
     await server.start();
     console.log(`Server start on ${server.info.uri}`);

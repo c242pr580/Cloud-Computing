@@ -12,6 +12,7 @@
   "description": "",
   "dependencies": {
     "@google-cloud/firestore": "^7.10.0",
+    "@google-cloud/storage": "^7.14.0",
     "@hapi/boom": "^10.0.1",
     "@hapi/hapi": "^21.3.12",
     "@hapi/jwt": "^3.2.0",

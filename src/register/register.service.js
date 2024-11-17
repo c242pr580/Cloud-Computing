@@ -29,6 +29,7 @@ const registerUser = async (userData) => {
         name,
         phone,
         role_id,
+        profilePicture: process.env.PROFILE_PICTURE_DEFAULT,
         createdAt: new Date().toISOString(),
     };
 

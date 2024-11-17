@@ -1,4 +1,5 @@
 const userModule = require('../user/user.module');
+const db = require('../server/firebase');
 
 const getUserBiodata = async (userId) => {
     const user = await userModule.findUserById(userId);
@@ -13,8 +14,14 @@ const getUserBiodata = async (userId) => {
         username: user.username,
         phone: user.phone,
         location: user.location,
-        role: user.role_id,
+        role_id: user.role_id,
+        profilePicture: user.profilePicture
     };
 };
 
-module.exports = { getUserBiodata };
+const updateUserBiodata = async (userId, biodata) => {
+    return await userModule.updateUserData(userId, biodata);
+};
+
+
+module.exports = { getUserBiodata, updateUserBiodata};

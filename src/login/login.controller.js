@@ -9,7 +9,7 @@ const loginHandler = async (request, h) => {
 
         const invalidParams = payloadKeys.filter(key => !allowedParams.includes(key));
         if (invalidParams.length > 0) {
-            const boomError = Boom.badRequest(`${invalidParams.join(', ')} not allowed.`);
+            const boomError = Boom.badRequest(`/ ${invalidParams.join(', ')} / not allowed.`);
             return h.response({
                 status: boomError.output.statusCode,
                 message: boomError.message,

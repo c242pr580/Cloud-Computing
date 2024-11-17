@@ -18,7 +18,19 @@ const findUserByEmail = async (email) => {
     return { user_id: userDoc.id, ...userDoc.data() };
 };
 
+const updateUserData = async (userId, biodata) => {
+    const userRef = userCollection.doc(userId);
+    const userSnapshot = await userRef.get();
+    if (!userSnapshot.exists) {
+        throw new Error('User not found. Please ensure the user exists and try again.');
+    }
+    await userRef.update(biodata);
+    const updatedUser = await userRef.get();
+    return updatedUser.data();
+};
+
 module.exports = {
     findUserById,
     findUserByEmail,
+    updateUserData
 };
