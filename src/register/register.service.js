@@ -1,6 +1,6 @@
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
-const userModule = require('../register/register.module');
+const registerModule = require('../register/register.module');
 
 const registerUser = async (userData) => {
     const { username, email, password, location, name, phone } = userData;
@@ -10,11 +10,11 @@ const registerUser = async (userData) => {
     if (![1, 2].includes(role_id)) {
         throw new Error('Invalid role id, Please provide a valid role (1 for customer, 2 for mitra).');
     }
-    if (await userModule.findUserByUsername(username)) {
+    if (await registerModule.findUserByUsername(username)) {
         throw new Error('The username you entered is already exists, Please choose another.');
     }
     
-    if (await userModule.findUserByEmail(email)) {
+    if (await registerModule.findUserByEmail(email)) {
         throw new Error('The email address is already exists, Please use a different email address.');
     }
  
@@ -38,17 +38,24 @@ const registerUser = async (userData) => {
         createdAt: new Date().toISOString(),
     };
 
-    await userModule.addUser(newUser);
+    await registerModule.addUser(newUser);
 
     if (role_id === 1) {
         const newCustomer = {
             customer_id: `customer-${crypto.randomUUID()}`,
             user_id: id,
         };
-        await userModule.addCustomer(newCustomer);
+        await registerModule.addCustomer(newCustomer);
+    }
+    if (role_id === 2) {
+        const newMitra = {
+            mitra_id: `mitra-${crypto.randomUUID()}`,
+            user_id: id,
+        };
+        await registerModule.addMitra(newMitra);
     }
 };
 
 module.exports = {
-    registerUser,
+    registerUser
 };

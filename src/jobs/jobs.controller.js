@@ -1,0 +1,394 @@
+const Boom = require('@hapi/boom');
+const jobsService = require('../jobs/jobs.service');
+const customersModule = require('../customer/customers.module');
+const mitrasModule = require('../mitra/mitras.module');
+const utils = require('../utils/utils');
+const { uploadFileToCloudStorage } = require('../server/storage');
+
+const createJobHandler = async (request, h) => {
+    try {
+        const allowedParams = ['title', 'deadline', 'location', 'cost', 'description', 'image'];
+        const payloadKeys = Object.keys(request.payload);
+        const invalidParams = payloadKeys.filter((key) => !allowedParams.includes(key));
+
+        if (invalidParams.length > 0) {
+            const boomError = Boom.badRequest(`/ ${invalidParams.join(', ')} / not allowed.`);
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        const { title, deadline, location, cost, description } = request.payload;
+        if (!title || !deadline || !location || !cost || !description) {
+            const boomError = Boom.badRequest('Please provide all required fields.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        if (Array.isArray(request.payload.image)) {
+            const boomError = Boom.badRequest('Only one image is allowed, Please remove any additional files and try again.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        const { userId } = request.auth.credentials;
+
+        const customer = await customersModule.findCustomerByUserId(userId);
+        if (!customer) {
+            const boomError = Boom.notFound('Customer profile not found, Please try again.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        const { customer_id } = customer;
+
+        let publicUrl = null;
+        if (request.payload.image) {
+            const file = request.payload.image;
+            const fileName = `${customer_id}-${Date.now()}-${file.hapi.filename}`;
+
+            if (!['image/jpeg', 'image/png'].includes(file.hapi.headers['content-type'])) {
+                const boomError = Boom.unsupportedMediaType('File type must be JPEG or PNG.');
+                return h.response({
+                    status: boomError.output.statusCode,
+                    message: boomError.message,
+                    error: true,
+                }).code(boomError.output.statusCode);
+            }
+
+            if (file.bytes > 1 * 1024 * 1024) {
+                const boomError = Boom.payloadTooLarge('File size must not exceed 1MB.');
+                return h.response({
+                    status: boomError.output.statusCode,
+                    message: boomError.message,
+                    error: true,
+                }).code(boomError.output.statusCode);
+            }
+
+            publicUrl = await uploadFileToCloudStorage(file, fileName, file.hapi.headers['content-type']);
+        }
+
+        const newJob = await jobsService.addJobById({
+            ...request.payload,
+            image: publicUrl,
+            customer_id,
+        });
+
+        const result = utils.removeNullProperties(newJob);
+
+        return h.response({
+            status: 201,
+            message: 'Job created successfully',
+            data: result,
+            error: false,
+        }).code(201);
+
+    } catch (error) {
+        const boomError = Boom.badRequest(error.message);
+        return h.response({
+            status: boomError.output.statusCode,
+            message: boomError.message,
+            error: true,
+        }).code(boomError.output.statusCode);
+    }
+};
+
+const getJobsHandler = async (request, h) => {
+    try {
+        const { userId } = request.auth.credentials;
+
+        const customer = await customersModule.findCustomerByUserId(userId);
+        if (!customer) {
+            const boomError = Boom.notFound('Customer profile not found, Please try again.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        const { customer_id } = customer;
+
+        const jobs = await jobsService.getJobsByCustomerId(customer_id);
+        
+        return h.response({
+            status: 200,
+            message: 'Job retrieved successfully',
+            data: jobs,
+            error: false,
+        }).code(200);
+
+    } catch (error) {
+        const boomError = Boom.badRequest(error.message);
+        return h.response({
+            status: boomError.output.statusCode,
+            message: boomError.message,
+            error: true,
+        }).code(boomError.output.statusCode);
+    }
+};
+
+const deleteJobHandler = async (request, h) => {
+    try {
+        const { job_id } = request.params;
+        const { userId } = request.auth.credentials;
+
+        const customer = await customersModule.findCustomerByUserId(userId);
+        if (!customer) {
+            const boomError = Boom.notFound('Customer profile not found, Please try again.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        const { customer_id } = customer;
+
+        await jobsService.deleteJobById(job_id, customer_id);
+
+        return h.response({
+            status: 200,
+            message: 'Job deleted successfully',
+            error: false,
+        }).code(200);
+
+    } catch (error) {
+        const boomError = Boom.badRequest(error.message);
+        return h.response({
+            status: boomError.output.statusCode,
+            message: boomError.message,
+            error: true,
+        }).code(boomError.output.statusCode);
+    }
+};
+
+
+const updateJobHandler = async (request, h) => {
+    try {
+        const { job_id } = request.params;
+        const { userId } = request.auth.credentials;
+
+        const allowedParams = ['title', 'deadline', 'location', 'cost', 'description', 'image'];
+        const payloadKeys = Object.keys(request.payload);
+        const invalidParams = payloadKeys.filter((key) => !allowedParams.includes(key));
+        if (invalidParams.length > 0) {
+            const boomError = Boom.badRequest(`/ ${invalidParams.join(', ')} / not allowed.`);
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        const customer = await customersModule.findCustomerByUserId(userId);
+        if (!customer) {
+            const boomError = Boom.notFound('Customer profile not found, Please try again.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        const { customer_id } = customer;
+
+        const job = await jobsService.getJobById(job_id);
+        if (!job) {
+            const boomError = Boom.notFound('Job not found, Please check your job id.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        if (job.customer_id != customer_id) {
+            const boomError = Boom.forbidden('Access denied, You do not have permission to update this job.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        if (job.status == 'In Progress') {
+            const boomError = Boom.forbidden('Job cannot be edited because it is already in progress.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        let publicUrl = job.image;
+
+        if (Array.isArray(request.payload.image)) {
+            const boomError = Boom.badRequest('Only one image is allowed, Please remove any additional files and try again.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        if (request.payload.image) {
+            const file = request.payload.image;
+            const fileName = `${customer_id}-${Date.now()}-${file.hapi.filename}`;
+
+            if (!['image/jpeg', 'image/png'].includes(file.hapi.headers['content-type'])) {
+                const boomError = Boom.unsupportedMediaType('File type must be JPEG or PNG.');
+                return h.response({
+                    status: boomError.output.statusCode,
+                    message: boomError.message,
+                    error: true,
+                }).code(boomError.output.statusCode);
+            }
+
+            if (file.bytes > 1 * 1024 * 1024) {
+                const boomError = Boom.payloadTooLarge('File size must not exceed 1MB.');
+                return h.response({
+                    status: boomError.output.statusCode,
+                    message: boomError.message,
+                    error: true,
+                }).code(boomError.output.statusCode);
+            }
+
+            publicUrl = await uploadFileToCloudStorage(file, fileName, file.hapi.headers['content-type']);
+        }
+
+        const updatedJob = {
+            title: request.payload.title || job.title,
+            deadline: request.payload.deadline || job.deadline,
+            location: request.payload.location || job.location,
+            cost: request.payload.cost || job.cost,
+            description: request.payload.description || job.description,
+            image: publicUrl,
+        };
+
+        await jobsService.updateJob(job_id, updatedJob, customer_id);
+
+        return h.response({
+            status: 200,
+            message: 'Job updated successfully',
+            error: false,
+        }).code(200);
+    } catch (error) {
+        const boomError = Boom.badImplementation(error.message);
+        return h.response({
+            status: boomError.output.statusCode,
+            message: boomError.message,
+            error: true,
+        }).code(boomError.output.statusCode);
+    }
+};
+
+
+const assignJobHandler = async (request, h) => {
+    try {
+        const { job_id } = request.params;
+        const { userId } = request.auth.credentials;
+
+        const mitra = await mitrasModule.findMitraByUserId(userId);
+        if (!mitra) {
+            const boomError = Boom.notFound('Mitra profile not found, Please try again.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        const { mitra_id } = mitra;
+
+        const job = await jobsService.getJobById(job_id);
+        if (!job) {
+            const boomError = Boom.notFound('Job not found, Please check your job id.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        if (job.status != 'Pending') {
+            const boomError = Boom.badRequest('Job is has been taken, Please check other jobs.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        const updatedJob = await jobsService.assignJob(job_id, mitra_id);
+
+        return h.response({
+            status: 200,
+            message: 'Job assigned successfully',
+            data: updatedJob,
+            error: false,
+        }).code(200);
+    } catch (error) {
+        const boomError = Boom.badRequest(error.message);
+        return h.response({
+            status: boomError.output.statusCode,
+            message: boomError.message,
+            error: true,
+        }).code(boomError.output.statusCode);
+    }
+};
+
+
+const getJobsByMitraHandler = async (request, h) => {
+    try {
+        const { userId } = request.auth.credentials;
+
+        const mitra = await mitrasModule.findMitraByUserId(userId);
+        if (!mitra) {
+            const boomError = Boom.notFound('Mitra profile not found, Please try again.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        const { mitra_id } = mitra;
+
+        const jobs = await jobsService.getJobsByMitraId(mitra_id);
+
+        return h.response({
+            status: 200,
+            message: 'Job retrieved successfully.',
+            data: jobs,
+            error: false,
+        }).code(200);
+    } catch (error) {
+        const boomError = Boom.badRequest(error.message);
+        return h.response({
+            status: boomError.output.statusCode,
+            message: boomError.message,
+            error: true,
+        }).code(boomError.output.statusCode);
+    }
+};
+
+module.exports = {
+    createJobHandler,
+    getJobsHandler,
+    deleteJobHandler,
+    updateJobHandler,
+    assignJobHandler,
+    getJobsByMitraHandler,
+};

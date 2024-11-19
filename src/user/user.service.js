@@ -23,4 +23,7 @@ const updateUserBiodata = async (userId, biodata) => {
 };
 
 
-module.exports = { getUserBiodata, updateUserBiodata};
+module.exports = {
+    getUserBiodata,
+    updateUserBiodata
+};

@@ -53,7 +53,7 @@ const loginHandler = async (request, h) => {
             error: false
         }).code(200);
     } catch (error) {
-        const boomError = Boom.unauthorized(error.message);
+        const boomError = Boom.badRequest(error.message);
         return h.response({
             status: boomError.output.statusCode,
             message: boomError.message,

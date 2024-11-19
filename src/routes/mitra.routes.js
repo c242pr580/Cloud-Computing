@@ -1,16 +1,34 @@
-const { verifyRole } = require('../middleware/role.middleware');
+const { verifyMitra } = require('../middleware/mitra.middleware');
+const { assignJobHandler, getJobsByMitraHandler } = require('../jobs/jobs.controller');
 
 module.exports = [
     {
         method: 'GET',
         path: '/mitra',
-        // handler: loginHandler,
         options: {
             auth: 'jwt',
-            pre: [verifyRole(2)],
+            pre: [verifyMitra],
         },
         handler: (request, h) => {
             return { message: 'Welcome to the mitra dashboard!' };
         },
-    }
+    },
+    {
+        method: 'POST',
+        path: '/mitra/jobs/assign/{job_id}',
+        options: {
+            auth: 'jwt',
+            pre: [verifyMitra],
+        },
+        handler: assignJobHandler,
+    },
+    {
+        method: 'GET',
+        path: '/mitra/jobs',
+        options: {
+            auth: 'jwt',
+            pre: [verifyMitra],
+        },
+        handler: getJobsByMitraHandler,
+    },
 ];

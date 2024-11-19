@@ -1,6 +1,7 @@
 const firestore = require('../server/firebase');
 const userCollection = firestore.collection('users');
 const customersCollection = firestore.collection('customers');
+const mitrasCollection = firestore.collection('mitras');
 
 const addUser = async (userData) => {
     const userRef = userCollection.doc(userData.user_id);
@@ -12,6 +13,12 @@ const addCustomer = async (customerData) => {
     const customerRef = customersCollection.doc(customerData.customer_id);
     await customerRef.set(customerData);
     return { id: customerRef.id, ...customerData };
+};
+
+const addMitra = async (mitraData) => {
+    const mitraRef = mitrasCollection.doc(mitraData.mitra_id);
+    await mitraRef.set(mitraData);
+    return { id: mitraRef.id, ...mitraData };
 };
 
 const findUserByUsername = async (username) => {
@@ -28,5 +35,6 @@ module.exports = {
     addUser,
     findUserByUsername,
     findUserByEmail,
-    addCustomer
+    addCustomer,
+    addMitra
 };

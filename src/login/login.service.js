@@ -1,11 +1,12 @@
 const jwt = require('jsonwebtoken');
-const userModule = require('../login/login.module');
+const loginModule = require('../login/login.module');
 const bcrypt = require('bcrypt');
+const utils = require('../utils/utils');
 const { JWT_SECRET, JWT_EXPIRES_IN } = process.env;
 
 const loginUser = async ({ email, password }) => {
    
-    const user = await userModule.findUserByEmail(email);
+    const user = await loginModule.findUserByEmail(email);
     if (!user) {
         throw new Error('User not found, Please check your email or sign up.');
     }
@@ -15,11 +16,18 @@ const loginUser = async ({ email, password }) => {
         throw new Error('Incorrect password, Please check your password and try again.');
     }
 
-    let customerId = null;
+    let customer_id = null;
+    let mitra_id = null;
+
     if (user.role_id == 1) {
-        const customer = await userModule.findCustomerByUserId(user.user_id);
+        const customer = await loginModule.findCustomerByUserId(user.user_id);
         if (customer) {
-            customerId = customer.customer_id;
+            customer_id = customer.customer_id;
+        }
+    } else if (user.role_id == 2) {
+        const mitra = await loginModule.findMitraByUserId(user.user_id);
+        if (mitra) {
+            mitra_id = mitra.mitra_id;
         }
     }
 
@@ -35,15 +43,21 @@ const loginUser = async ({ email, password }) => {
         }
     );
 
-    return {
+    const responseData = {
         token,
         userId: user.user_id,
         name: user.name,
         username: user.username,
         email: user.email,
         role_id: user.role_id,
-        customerId
+        customer_id,
+        mitra_id,
+        createdAt: user.createdAt
      };
+
+     const responseLogin = utils.removeNullProperties(responseData);
+     return responseLogin
+    
 };
 
 module.exports = { loginUser };

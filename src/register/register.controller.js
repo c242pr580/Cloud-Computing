@@ -52,5 +52,5 @@ const registerHandler = async (request, h) => {
 };
 
 module.exports = {
-    registerHandler,
+    registerHandler
 };
