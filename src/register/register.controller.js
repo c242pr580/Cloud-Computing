@@ -25,6 +25,16 @@ const registerHandler = async (request, h) => {
             }).code(boomError.output.statusCode);
         }
 
+        const phoneRegex = /^(\+?\d{1,3})?(\d{8,15})$/;
+        if (!phoneRegex.test(phone)) {
+            const boomError = Boom.badRequest('Invalid phone number format, Please Use format +0123456789 or 08123456789.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true
+            }).code(boomError.output.statusCode);
+        }
+
         await registerService.registerUser(request.payload);
         return h.response({
             status: 201,
