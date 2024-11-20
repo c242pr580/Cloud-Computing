@@ -15,7 +15,7 @@
   - `password` as `string` - `Password`
   - `phone` as `string` - `Phone`
   - `location` as `string` - `Location`
-  - `role_id` as `string` - `Role ([1] Customer / [2] Mitra)`
+  - `role_id` as `number` - `Role ([1] Customer / [2] Mitra)`
 - **Response** :
 
 ```json
