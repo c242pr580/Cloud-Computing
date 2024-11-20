@@ -3,8 +3,6 @@
 
 # API Documentation
 
-## Register
-
 ### User Register
 - **URL** : `/register`
 - **Method** : `POST`
