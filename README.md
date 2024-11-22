@@ -14,7 +14,7 @@
   - `phone` as `string` - `Phone Number`
   - `location` as `string` - `Location`
   - `role_id` as `number` - `Role ([1] Customer / [2] Mitra)`
-- **Response** :
+- **Response**:
 
 ```json
 {
@@ -112,7 +112,7 @@
   - `phone` as `string` - `Phone Number`
   - `location` as `string` - `Location`
   - `image` as `file` - `File Photo Profile`
-- **Response** :
+- **Response**:
 
 ```json
 {
