@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('../utils/scheduler');
 const Hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
 const validate = require('./validate');
@@ -8,8 +9,10 @@ const loginRoutes = require('../routes/login.routes');
 const userRoutes = require('../routes/user.routes');
 const customerRoutes = require('../routes/customer.routes');
 const mitraRoutes = require('../routes/mitra.routes');
+const adminRoutes = require('../routes/admin.routes');
 
 (async () => {
+    const now = new Date();
     const server = Hapi.server({
         port: process.env.PORT,
         host: 'localhost',
@@ -41,6 +44,7 @@ const mitraRoutes = require('../routes/mitra.routes');
     server.route(userRoutes);
     server.route(customerRoutes);
     server.route(mitraRoutes);
+    server.route(adminRoutes);
 
     server.route({
         method: '*',
@@ -54,6 +58,7 @@ const mitraRoutes = require('../routes/mitra.routes');
     });
 
     await server.start();
+    console.log(now.toString());
     console.log(`Server start on ${server.info.uri}`);
 
 process.on('unhandledRejection', (err) => {

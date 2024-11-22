@@ -7,5 +7,5 @@ const findMitraByUserId = async (userId) => {
 };
 
 module.exports = {
-    findMitraByUserId,
+    findMitraByUserId
 };

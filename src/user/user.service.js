@@ -14,7 +14,8 @@ const getUserBiodata = async (userId) => {
         phone: user.phone,
         location: user.location,
         role_id: user.role_id,
-        profilePicture: user.profilePicture
+        profilePicture: user.profilePicture,
+        createdAt: user.createdAt
     };
 };
 

@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const registerModule = require('../register/register.module');
+const { getCurrentTime } = require('../utils/time');
 
 const registerUser = async (userData) => {
     const { username, email, password, location, name, phone } = userData;
@@ -18,10 +19,6 @@ const registerUser = async (userData) => {
         throw new Error('The email address is already exists, Please use a different email address.');
     }
  
-    if (password.length < 8) {
-        throw new Error('Password must be at least 8 characters long.');
-    }
-
     const id = `user-${crypto.randomUUID()}`;
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -35,7 +32,7 @@ const registerUser = async (userData) => {
         phone,
         role_id,
         profilePicture: process.env.PROFILE_PICTURE_DEFAULT,
-        createdAt: new Date().toISOString(),
+        createdAt: getCurrentTime(),
     };
 
     await registerModule.addUser(newUser);

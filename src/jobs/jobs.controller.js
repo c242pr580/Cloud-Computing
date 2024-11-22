@@ -2,6 +2,7 @@ const Boom = require('@hapi/boom');
 const jobsService = require('../jobs/jobs.service');
 const customersModule = require('../customer/customers.module');
 const mitrasModule = require('../mitra/mitras.module');
+const transactionsModule = require('../transaction/transactions.module');
 const utils = require('../utils/utils');
 const { uploadFileToCloudStorage } = require('../server/storage');
 
@@ -23,6 +24,20 @@ const createJobHandler = async (request, h) => {
         const { title, deadline, location, cost, description } = request.payload;
         if (!title || !deadline || !location || !cost || !description) {
             const boomError = Boom.badRequest('Please provide all required fields.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        const currentDate = new Date();
+        const providedDeadline = new Date(deadline);
+        currentDate.setHours(0, 0, 0, 0);
+        providedDeadline.setHours(0, 0, 0, 0);
+
+        if (providedDeadline < currentDate) {
+            const boomError = Boom.badRequest('Deadline cannot be a past date, Please try again.');
             return h.response({
                 status: boomError.output.statusCode,
                 message: boomError.message,
@@ -57,7 +72,7 @@ const createJobHandler = async (request, h) => {
         if (request.payload.image) {
             const file = request.payload.image;
             const fileName = `${customer_id}-${Date.now()}-${file.hapi.filename}`;
-
+        
             if (!['image/jpeg', 'image/png'].includes(file.hapi.headers['content-type'])) {
                 const boomError = Boom.unsupportedMediaType('File type must be JPEG or PNG.');
                 return h.response({
@@ -174,7 +189,6 @@ const deleteJobHandler = async (request, h) => {
     }
 };
 
-
 const updateJobHandler = async (request, h) => {
     try {
         const { job_id } = request.params;
@@ -225,6 +239,15 @@ const updateJobHandler = async (request, h) => {
 
         if (job.status == 'In Progress') {
             const boomError = Boom.forbidden('Job cannot be edited because it is already in progress.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        if (job.status == 'Completed') {
+            const boomError = Boom.forbidden('Job cannot be edited because it is already completed.');
             return h.response({
                 status: boomError.output.statusCode,
                 message: boomError.message,
@@ -294,7 +317,6 @@ const updateJobHandler = async (request, h) => {
     }
 };
 
-
 const assignJobHandler = async (request, h) => {
     try {
         const { job_id } = request.params;
@@ -315,6 +337,15 @@ const assignJobHandler = async (request, h) => {
         const job = await jobsService.getJobById(job_id);
         if (!job) {
             const boomError = Boom.notFound('Job not found, Please check your job id.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        if (job.status == 'Canceled') {
+            const boomError = Boom.badRequest('Job is has been canceled, Please check other jobs.');
             return h.response({
                 status: boomError.output.statusCode,
                 message: boomError.message,
@@ -348,7 +379,6 @@ const assignJobHandler = async (request, h) => {
         }).code(boomError.output.statusCode);
     }
 };
-
 
 const getJobsByMitraHandler = async (request, h) => {
     try {
@@ -384,6 +414,138 @@ const getJobsByMitraHandler = async (request, h) => {
     }
 };
 
+const completeJobHandler = async (request, h) => {
+    try {
+        const { job_id } = request.params;
+        const { userId } = request.auth.credentials;
+
+        const customer = await customersModule.findCustomerByUserId(userId);
+        if (!customer) {
+            const boomError = Boom.notFound('Customer profile not found, Please try again.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        const { customer_id } = customer;
+
+        const job = await jobsService.getJobById(job_id);
+        if (!job) {
+            const boomError = Boom.notFound('Job not found, Please check your job id.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        if (job.customer_id != customer_id) {
+            const boomError = Boom.forbidden('Access denied, You do not have permission to update this job.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        if (job.status != 'In Progress') {
+            const boomError = Boom.badRequest('Job cannot marked completed, Your job not in progress.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        const transaction = await transactionsModule.findTransactionByJobId(job_id);
+        if (!transaction || transaction.status != 'Completed') {
+            const boomError = Boom.badRequest('Payment is not completed for this job, Please try again.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        const updatedJob = await jobsService.completeJob(job_id);
+
+        return h.response({
+            status: 200,
+            message: 'Job marked as completed successfully',
+            data: updatedJob,
+            error: false,
+        }).code(200);
+    } catch (error) {
+        const boomError = Boom.badRequest(error.message);
+        return h.response({
+            status: boomError.output.statusCode,
+            message: boomError.message,
+            error: true,
+        }).code(boomError.output.statusCode);
+    }
+};
+
+const cancelOverdueJobsHandler = async (request, h) => {
+    try {
+        const canceledJobs = await jobsService.checkAndCancelOverdueJobs();
+        return h.response({
+            status: 200,
+            message: 'Overdue jobs checked and canceled successfully',
+            data: canceledJobs,
+            error: false,
+        }).code(200);
+    } catch (error) {
+        const boomError = Boom.badRequest(error.message);
+        return h.response({
+            status: boomError.output.statusCode,
+            message: boomError.message,
+            error: true,
+        }).code(boomError.output.statusCode);
+    }
+};
+
+const getAllJobsHandler = async (request, h) => {
+    try {
+        const jobs = await jobsService.getAllJobs();
+
+        return h.response({
+            status: 200,
+            message: 'All Jobs retrieved successfully',
+            data: jobs,
+            error: false,
+        }).code(200);
+    } catch (error) {
+        const boomError = Boom.badRequest(error.message);
+        return h.response({
+            status: boomError.output.statusCode,
+            message: boomError.message,
+            error: true,
+        }).code(boomError.output.statusCode);
+    }
+};
+
+const getPendingJobsHandler = async (request, h) => {
+    try {
+        const jobs = await jobsService.getPendingJobs();
+
+        return h.response({
+            status: 200,
+            message: 'Pending jobs retrieved successfully',
+            data: jobs,
+            error: false,
+        }).code(200);
+    } catch (error) {
+        const boomError = Boom.badRequest(error.message);
+        return h.response({
+            status: boomError.output.statusCode,
+            message: boomError.message,
+            error: true,
+        }).code(boomError.output.statusCode);
+    }
+};
+
 module.exports = {
     createJobHandler,
     getJobsHandler,
@@ -391,4 +553,8 @@ module.exports = {
     updateJobHandler,
     assignJobHandler,
     getJobsByMitraHandler,
+    completeJobHandler,
+    cancelOverdueJobsHandler,
+    getPendingJobsHandler,
+    getAllJobsHandler
 };

@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const jobsModule = require('../jobs/jobs.module');
+const { getCurrentTime } = require('../utils/time');
 
 const addJobById = async (jobData) => {
     const { title, deadline, location, cost, description, image, customer_id } = jobData;
@@ -15,7 +16,7 @@ const addJobById = async (jobData) => {
         image: image || null,
         customer_id,
         status: 'Pending', 
-        createdAt: new Date().toISOString(),
+        createdAt: getCurrentTime(),
     };
 
     await jobsModule.addJob(newJob);
@@ -72,6 +73,46 @@ const assignJob = async (job_id, mitra_id) => {
     return updatedJob;
 };
 
+const completeJob = async (job_id) => {
+    const job = await jobsModule.findJobById(job_id);
+
+    const updatedJob = {
+        ...job,
+        status: 'Completed',
+        completedAt: getCurrentTime(),
+    };
+
+    await jobsModule.updateJobById(job_id, updatedJob);
+    return updatedJob;
+};
+
+const checkAndCancelOverdueJobs = async () => {
+    const now = getCurrentTime();
+    const overdueJobs = await jobsModule.findJobsByStatusAndDeadline('In Progress', now);
+    const canceledJobs = [];
+
+    for (const job of overdueJobs) {
+        const updatedJob = {
+            ...job,
+            status: 'Canceled',
+            canceledAt: getCurrentTime(),
+        };
+
+        await jobsModule.updateJobById(job.job_id, updatedJob);
+        canceledJobs.push(updatedJob);
+    }
+
+    return canceledJobs;
+};
+const getAllJobs = async () => {
+    return await jobsModule.getAllJobs();
+};
+
+const getPendingJobs = async () => {
+    return await jobsModule.getPendingJobs();
+};
+
+
 module.exports = {
     addJobById,
     deleteJobById,
@@ -80,4 +121,8 @@ module.exports = {
     updateJob,
     getJobById,
     assignJob,
+    completeJob,
+    checkAndCancelOverdueJobs,
+    getAllJobs,
+    getPendingJobs
 };

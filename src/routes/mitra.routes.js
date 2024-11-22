@@ -1,5 +1,5 @@
 const { verifyMitra } = require('../middleware/mitra.middleware');
-const { assignJobHandler, getJobsByMitraHandler } = require('../jobs/jobs.controller');
+const { assignJobHandler, getJobsByMitraHandler, getAllJobsHandler, getPendingJobsHandler } = require('../jobs/jobs.controller');
 
 module.exports = [
     {
@@ -30,5 +30,23 @@ module.exports = [
             pre: [verifyMitra],
         },
         handler: getJobsByMitraHandler,
+    },
+    {
+        method: 'GET',
+        path: '/alljobs',
+        options: {
+            auth: 'jwt',
+            pre: [verifyMitra],
+        },
+        handler: getAllJobsHandler,
+    },
+    {
+        method: 'GET',
+        path: '/jobs/pending',
+        options: {
+            auth: 'jwt',
+            pre: [verifyMitra],
+        },
+        handler: getPendingJobsHandler,
     },
 ];

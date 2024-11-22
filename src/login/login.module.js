@@ -27,5 +27,5 @@ const findMitraByUserId = async (user_id) => {
 module.exports = {
     findUserByEmail,
     findCustomerByUserId,
-    findMitraByUserId,
+    findMitraByUserId
 };

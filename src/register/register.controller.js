@@ -25,9 +25,28 @@ const registerHandler = async (request, h) => {
             }).code(boomError.output.statusCode);
         }
 
+        if (password.length < 8) {
+            const boomError = Boom.badRequest('Password must be at least 8 characters long.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true
+            }).code(boomError.output.statusCode);
+        }
+
+        const passwordRegex = /^(?=.*[A-Z])(?=.*[\d\W]).+$/;
+        if (!passwordRegex.test(password)) {
+            const boomError = Boom.badRequest('Password must contain at least one uppercase letter and one number or special character.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true
+            }).code(boomError.output.statusCode);
+        }
+
         const phoneRegex = /^(\+?\d{1,3})?(\d{8,15})$/;
         if (!phoneRegex.test(phone)) {
-            const boomError = Boom.badRequest('Invalid phone number format, Please Use format +0123456789 or 08123456789.');
+            const boomError = Boom.badRequest('Invalid phone number format, Please use format +0123456789 or 08123456789.');
             return h.response({
                 status: boomError.output.statusCode,
                 message: boomError.message,

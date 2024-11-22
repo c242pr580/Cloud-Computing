@@ -4,14 +4,14 @@
 # API Documentation
 
 ### User Register
-- **URL** : `/register`
-- **Method** : `POST`
-- **Request Body** :
+- **URL**: `/register`
+- **Method**: `POST`
+- **Request Body**:
   - `username` as `string` - `Username`
   - `name` as `string` -` Name`
   - `email` as `string` - `Email`
   - `password` as `string` - `Password`
-  - `phone` as `string` - `Phone`
+  - `phone` as `string` - `Phone Number`
   - `location` as `string` - `Location`
   - `role_id` as `number` - `Role ([1] Customer / [2] Mitra)`
 - **Response** :
@@ -25,8 +25,8 @@
 ```
 ### User Login as Customer
 
-- **URL** : `/login`
-- **Method** : `POST`
+- **URL**: `/login`
+- **Method**: `POST`
 - **Request Body**:
   - `email` as `string`
   - `password` as `string`
@@ -44,15 +44,15 @@
         "email": "lostvape1@outlook.com",
         "role_id": 1,
         "customer_id": "customer-fdc56e2c-033f-4fcb-bf88-e8a0ca3da164",
-        "createdAt": "2024-11-19T15:37:00.051Z"
+        "createdAt": "2024-11-23 01:44:12"
     },
     "error": false
 }
 ```
 ### User Login as Mitra
 
-- **URL** : `/login`
-- **Method** : `POST`
+- **URL**: `/login`
+- **Method**: `POST`
 - **Request Body**:
   - `email` as `string`
   - `password` as `string`
@@ -70,8 +70,54 @@
         "email": "lostvape2@outlook.com",
         "role_id": 2,
         "mitra_id": "mitra-bee38d87-c749-4406-9c92-4eeb30f1aa32",
-        "createdAt": "2024-11-19T15:37:00.051Z"
+        "createdAt": "2024-11-23 01:44:12"
     },
+    "error": false
+}
+```
+### Get Biodata User
+
+- **URL**: `/biodata`
+- **Method**: `GET`
+- **Auth required**: `YES`
+- **Response**:
+
+```json
+{
+    "status": 200,
+    "message": "User biodata retrieved successfully",
+    "data": {
+        "userId": "user-63995084-f9f5-42f0-be6e-eab597671000",
+        "name": "Mr Babe",
+        "email": "mrbabe000@gmail.com",
+        "username": "mrbabe",
+        "phone": "082109098989",
+        "location": "Bangka Belitung",
+        "role_id": "Mitra",
+        "profilePicture": "https://storage.googleapis.com/serabutinn-bucket/profile_picture_default.jpg",
+        "createdAt": "2024-11-23 01:44:12"
+    },
+    "error": false
+}
+```
+### Update Biodata User
+
+- **URL**: `/biodata/update`
+- **Method**: `POST`
+- **Auth required**: `YES`
+- **Request Header**:
+  - `Content-Type` : `multipart/form-data`
+- **Request Body (Optional)**:
+  - `name` as `string` - `Name`
+  - `phone` as `string` - `Phone Number`
+  - `location` as `string` - `Location`
+  - `image` as `file` - `File Photo Profile`
+- **Response** :
+
+```json
+{
+    "status": 200,
+    "message": "User biodata updated successfully",
     "error": false
 }
 ```

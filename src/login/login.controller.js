@@ -27,7 +27,7 @@ const loginHandler = async (request, h) => {
         }
 
         if (password.length < 8) {
-            const boomError = Boom.unauthorized('Password must be at least 8 characters.');
+            const boomError = Boom.badRequest('Password must be at least 8 characters.');
             return h.response({
                 status: boomError.output.statusCode,
                 message: boomError.message,
