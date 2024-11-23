@@ -23,6 +23,11 @@ const adminRoutes = require('../routes/admin.routes');
         },
     });
 
+    server.ext('onRequest', (request, h) => {
+        request.url.pathname = request.url.pathname.replace(/\/+/g, '/');
+        return h.continue;
+    });
+
     await server.register(Jwt);
 
 
