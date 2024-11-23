@@ -16,7 +16,7 @@ const adminRoutes = require('../routes/admin.routes');
     const now = getCurrentTime();
     const server = Hapi.server({
         port: process.env.PORT,
-        host: 'localhost',
+        host: '0.0.0.0',
         routes: {
             cors: {
                 origin: ['*'],
