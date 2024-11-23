@@ -1,6 +1,6 @@
 FROM node:18.17.1
 WORKDIR /app
-COPY .env .env
+COPY .env ./
 COPY . .
 RUN npm install
 
