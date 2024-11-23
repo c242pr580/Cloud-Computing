@@ -4,4 +4,5 @@ COPY .env ./
 COPY . .
 RUN npm install
 
+
 CMD ["npm", "run", "start:prod"]
