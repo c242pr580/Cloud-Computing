@@ -1,8 +1,5 @@
 node_modules/
-
-*.log
-
 build/
-
+*.log
 Dockerfile
 .dockerignore
