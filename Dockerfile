@@ -4,8 +4,8 @@ WORKDIR /app
 
 COPY . .
 
-RUN npm install
+RUN npm ci
 
-ENV PORT=3000
+EXPOSE 8080
 
 CMD ["npm", "run", "start:prod"]
