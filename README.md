@@ -1,4 +1,4 @@
-# WEB Server API Serabut Inn
+# WEB Server API SerabutInn
 > Capstone Project C242-PR580
 
 ### Development Backend Endpoint
