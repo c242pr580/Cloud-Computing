@@ -28,7 +28,7 @@ options:
   logging: CLOUD_LOGGING_ONLY
 
 substitutions:
-  _REGION: asia-east1
+  _REGION: us-central1
 
 images:
   - 'gcr.io/$PROJECT_ID/serabutinn'
