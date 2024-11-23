@@ -4,6 +4,7 @@ const customersModule = require('../customer/customers.module');
 const mitrasModule = require('../mitra/mitras.module');
 const transactionsModule = require('../transaction/transactions.module');
 const utils = require('../utils/utils');
+const { getCurrentTime, getTime } = require('../utils/time');
 const { uploadFileToCloudStorage } = require('../server/storage');
 
 const createJobHandler = async (request, h) => {
@@ -31,8 +32,18 @@ const createJobHandler = async (request, h) => {
             }).code(boomError.output.statusCode);
         }
 
-        const currentDate = new Date();
-        const providedDeadline = new Date(deadline);
+        const costRegex = /^\d+$/;
+        if (!costRegex.test(cost)) {
+            const boomError = Boom.badRequest('Cost must contain only numeric characters (0-9),');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        const currentDate = getTime(getCurrentTime()); 
+        const providedDeadline = getTime(deadline);
         currentDate.setHours(0, 0, 0, 0);
         providedDeadline.setHours(0, 0, 0, 0);
 
@@ -72,7 +83,7 @@ const createJobHandler = async (request, h) => {
         if (request.payload.image) {
             const file = request.payload.image;
             const fileName = `${customer_id}-${Date.now()}-${file.hapi.filename}`;
-        
+
             if (!['image/jpeg', 'image/png'].includes(file.hapi.headers['content-type'])) {
                 const boomError = Boom.unsupportedMediaType('File type must be JPEG or PNG.');
                 return h.response({
@@ -136,7 +147,7 @@ const getJobsHandler = async (request, h) => {
         const { customer_id } = customer;
 
         const jobs = await jobsService.getJobsByCustomerId(customer_id);
-        
+
         return h.response({
             status: 200,
             message: 'Job retrieved successfully',
@@ -450,8 +461,9 @@ const completeJobHandler = async (request, h) => {
             }).code(boomError.output.statusCode);
         }
 
-        if (job.status != 'In Progress') {
-            const boomError = Boom.badRequest('Job cannot marked completed, Your job not in progress.');
+        const transaction = await transactionsModule.findTransactionByJobId(job_id);
+        if (!transaction || transaction.status != 'Completed') {
+            const boomError = Boom.badRequest('Payment is not completed for this job, Please try again.');
             return h.response({
                 status: boomError.output.statusCode,
                 message: boomError.message,
@@ -459,9 +471,8 @@ const completeJobHandler = async (request, h) => {
             }).code(boomError.output.statusCode);
         }
 
-        const transaction = await transactionsModule.findTransactionByJobId(job_id);
-        if (!transaction || transaction.status != 'Completed') {
-            const boomError = Boom.badRequest('Payment is not completed for this job, Please try again.');
+        if (job.status != 'In Progress') {
+            const boomError = Boom.badRequest('Job cannot marked completed, Your job not in progress.');
             return h.response({
                 status: boomError.output.statusCode,
                 message: boomError.message,

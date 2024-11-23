@@ -4,6 +4,7 @@ const Hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
 const validate = require('./validate');
 const Boom = require('@hapi/boom');
+const { getCurrentTime } = require('../utils/time');
 const registerRoutes = require('../routes/register.routes');
 const loginRoutes = require('../routes/login.routes');
 const userRoutes = require('../routes/user.routes');
@@ -12,7 +13,7 @@ const mitraRoutes = require('../routes/mitra.routes');
 const adminRoutes = require('../routes/admin.routes');
 
 (async () => {
-    const now = new Date();
+    const now = getCurrentTime();
     const server = Hapi.server({
         port: process.env.PORT,
         host: 'localhost',
@@ -63,7 +64,7 @@ const adminRoutes = require('../routes/admin.routes');
     });
 
     await server.start();
-    console.log(now.toString());
+    console.log(`Server Time | ${now.toString()}`);
     console.log(`Server start on ${server.info.uri}`);
 
 process.on('unhandledRejection', (err) => {
