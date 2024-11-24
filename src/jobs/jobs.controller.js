@@ -217,6 +217,16 @@ const updateJobHandler = async (request, h) => {
             }).code(boomError.output.statusCode);
         }
 
+        const costRegex = /^\d+$/;
+        if (!costRegex.test(cost)) {
+            const boomError = Boom.badRequest('Cost must contain only numeric characters (0-9),');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
         const customer = await customersModule.findCustomerByUserId(userId);
         if (!customer) {
             const boomError = Boom.notFound('Customer profile not found, Please try again.');

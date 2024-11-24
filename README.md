@@ -2,7 +2,7 @@
 > Capstone Project C242-PR580
 
 ### Development Backend Endpoint
-- **SerabutInn**: **https://serabutinn-api-1079606741730.asia-southeast2.run.app**
+- **SerabutInn**: **https://serabutinn-1079606741730.asia-southeast2.run.app/**
 
 # API Documentation
 
