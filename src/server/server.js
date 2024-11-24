@@ -10,7 +10,7 @@ const loginRoutes = require('../routes/login.routes');
 const userRoutes = require('../routes/user.routes');
 const customerRoutes = require('../routes/customer.routes');
 const mitraRoutes = require('../routes/mitra.routes');
-const adminRoutes = require('../routes/admin.routes');
+const jobRoutes = require('../routes/job.routes');
 
 (async () => {
     const now = getCurrentTime();
@@ -50,7 +50,7 @@ const adminRoutes = require('../routes/admin.routes');
     server.route(userRoutes);
     server.route(customerRoutes);
     server.route(mitraRoutes);
-    server.route(adminRoutes);
+    server.route(jobRoutes);
 
     server.route({
         method: '*',
@@ -59,7 +59,7 @@ const adminRoutes = require('../routes/admin.routes');
             auth: false
         },
         handler: (request, h) => {
-            return Boom.notFound('404 Not found');
+            return 'Hello World! This is Web Server SerabutInn.';
         }
     });
 

@@ -1,4 +1,5 @@
 const { getUserBiodataHandler, updateUserBiodataHandler} = require('../user/user.controller');
+const { getUserDetailByCustomerIdHandler, getUserDetailByMitraIdHandler } = require('../user/user.controller');
 
 module.exports = [
     {
@@ -22,5 +23,21 @@ module.exports = [
                 maxBytes: 1 * 1024 * 1024,
             },
         },
-    }
+    },
+    {
+        method: 'GET',
+        path: '/user/customer/{customer_id}',
+        handler: getUserDetailByCustomerIdHandler,
+        options: {
+            auth: 'jwt',
+        },
+    },
+    {
+        method: 'GET',
+        path: '/user/mitra/{mitra_id}',
+        handler: getUserDetailByMitraIdHandler,
+        options: {
+            auth: 'jwt',
+        },
+    },
 ];

@@ -7,7 +7,7 @@ const getUserBiodata = async (userId) => {
     }
 
     return {
-        userId: user.user_id,
+        user_id: user.user_id,
         name: user.name,
         email: user.email,
         username: user.username,
@@ -23,8 +23,12 @@ const updateUserBiodata = async (userId, biodata) => {
     return await userModule.updateUserData(userId, biodata);
 };
 
+const getUserById = async (userId) => {
+    return await userModule.findUserById(userId);
+};
 
 module.exports = {
     getUserBiodata,
-    updateUserBiodata
+    updateUserBiodata,
+    getUserById
 };

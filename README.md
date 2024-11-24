@@ -2,7 +2,7 @@
 > Capstone Project C242-PR580
 
 ### Development Backend Endpoint
-- **SerabutInn**: **https://serabutinn-1079606741730.asia-southeast2.run.app/**
+- **SerabutInn**: **https://serabutinn-1079606741730.asia-southeast2.run.app**
 
 # API Documentation
 
@@ -11,7 +11,7 @@
 - **Method**: `POST`
 - **Request Body**:
   - `username` as `string` - `Username`
-  - `name` as `string` -` Name`
+  - `name` as `string` -`Name`
   - `email` as `string` - `Email`
   - `password` as `string` - `Password`
   - `phone` as `string` - `Phone Number`
@@ -41,7 +41,7 @@
     "message": "Login successfully",
     "data": {
         "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c2VyLTVkMWZiZDQ4LWVkZjItNDFmOC05YzcwLTEyMTA2ZWZiODE0ZiIsInJvbGUiOjEsImlhdCI6MTczMTk1NjE3NCwiZXhwIjoxNzM0NTQ4MTc0fQ.b8gYwZwAn2LllOUlwdhRcLGmwg2415ajHtreb4Zkyt5",
-        "userId": "user-5d1fbd48-edf2-41f8-9c70-12106efb814f",
+        "user_id": "user-5d1fbd48-edf2-41f8-9c70-12106efb814f",
         "name": "Lost Vape 1",
         "username": "lost_vape1",
         "email": "lostvape1@outlook.com",
@@ -60,7 +60,7 @@
     "message": "Login successfully",
     "data": {
         "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c2VyLWZmNWI1MTE1LTQ2MWQtNDIwMS1hZDkxLWFkNGQ4MDU4ZDU5MSIsInJvbGUiOjIsImlhdCI6MTczMjA0NDcyMywiZXhwIjoxNzM0NjM2NzIzfQ.ymqkrAU9VNHIvTSCq6iGTa9MDYkS5BBPR9lCr7x178p",
-        "userId": "user-ff5b5115-461d-4201-ad91-ad4d8058d591",
+        "user_id": "user-ff5b5115-461d-4201-ad91-ad4d8058d591",
         "name": "Lost Vape 2",
         "username": "lost_vape2",
         "email": "lostvape2@outlook.com",
@@ -83,7 +83,7 @@
     "status": 200,
     "message": "User biodata retrieved successfully",
     "data": {
-        "userId": "user-63995084-f9f5-42f0-be6e-eab597671000",
+        "user_id": "user-63995084-f9f5-42f0-be6e-eab597671000",
         "name": "Mr Babe",
         "email": "mrbabe000@gmail.com",
         "username": "mrbabe",
@@ -117,7 +117,7 @@
     "error": false
 }
 ```
-### Create A Jobs With Image
+### Create A Jobs
 
 - **URL**: `/customer/jobs/create`
 - **Method**: `POST`
@@ -523,6 +523,85 @@
             "createdAt": "2024-11-24 00:50:34"
         }
     ],
+    "error": false
+}
+```
+### Get Detail By JobId
+
+- **URL**: `/jobs/detail/{job_id}`
+- **Method**: `GET`
+- **Auth required**: `YES`
+- **Response**:
+
+```json
+{
+    "status": 200,
+    "message": "Job details retrieved successfully",
+    "data": {
+        "job_id": "job-031127a4-4d44-460d-afd0-44bae1d3c843",
+        "title": "Antar Barang",
+        "deadline": "2024-11-23",
+        "location": "Bandung",
+        "cost": "200000p",
+        "description": "Anti Lama",
+        "image": null,
+        "customer_id": "customer-fdc56e2c-033f-4fcb-bf88-e8a0ca3da164",
+        "createdAt": "2024-11-24 01:19:57",
+        "mitra_id": "mitra-6c415957-115b-478d-8b23-0288aeff7bc8",
+        "order_id": "order-bbcc4643-7afe-40a4-ad2d-3ae927a14cd6",
+        "status": "Canceled",
+        "canceledAt": "2024-11-24 01:30:01"
+    },
+    "error": false
+}
+```
+### Get Detail User By CustomerId
+
+- **URL**: `/user/customer/{customer_id}`
+- **Method**: `GET`
+- **Auth required**: `YES`
+- **Response**:
+
+```json
+{
+    "status": 200,
+    "message": "User details retrieved successfully",
+    "data": {
+        "user_id": "user-5d1fbd48-edf2-41f8-9c70-12106efb814f",
+        "username": "lost_vape1",
+        "email": "lostvape1@outlook.com",
+        "location": "Bangka Belitung",
+        "name": "Lost Vape 1",
+        "phone": "082109098989",
+        "role_id": 1,
+        "profilePicture": "https://storage.googleapis.com/serabutinn-bucket/profile_picture_default.jpg",
+        "createdAt": "2024-11-17T18:55:29.485Z"
+    },
+    "error": false
+}
+```
+### Get Detail User By MitraId
+
+- **URL**: `/user/mitra/{mitra_id}`
+- **Method**: `GET`
+- **Auth required**: `YES`
+- **Response**:
+
+```json
+{
+    "status": 200,
+    "message": "User details retrieved successfully",
+    "data": {
+        "user_id": "user-1e99d1e7-6682-4db2-a77c-120b5b40779a",
+        "username": "lost_vape4",
+        "email": "lostvape4@outlook.com",
+        "location": "Bangka Belitung",
+        "name": "Lost Vape 4",
+        "phone": "082109098989",
+        "role_id": 2,
+        "profilePicture": "https://storage.googleapis.com/serabutinn-bucket/profile_picture_default.jpg",
+        "createdAt": "2024-11-20T03:59:09.472Z"
+    },
     "error": false
 }
 ```

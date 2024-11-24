@@ -6,6 +6,12 @@ const findCustomerByUserId = async (userId) => {
     return snapshot.empty ? null : { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
 };
 
+const findCustomerById = async (customer_id) => {
+    const customerDoc = await customersCollection.doc(customer_id).get();
+    return customerDoc.exists ? { id: customerDoc.id, ...customerDoc.data() } : null;
+};
+
 module.exports = {
     findCustomerByUserId,
+    findCustomerById
 };

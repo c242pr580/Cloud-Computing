@@ -45,7 +45,7 @@ const loginUser = async ({ email, password }) => {
 
     const responseData = {
         token,
-        userId: user.user_id,
+        user_id: user.user_id,
         name: user.name,
         username: user.username,
         email: user.email,

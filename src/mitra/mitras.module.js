@@ -6,6 +6,12 @@ const findMitraByUserId = async (userId) => {
     return snapshot.empty ? null : { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
 };
 
+const findMitraById = async (mitra_id) => {
+    const mitraDoc = await mitrasCollection.doc(mitra_id).get();
+    return mitraDoc.exists ? { id: mitraDoc.id, ...mitraDoc.data() } : null;
+};
+
 module.exports = {
-    findMitraByUserId
+    findMitraByUserId,
+    findMitraById
 };

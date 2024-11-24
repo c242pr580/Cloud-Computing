@@ -217,16 +217,6 @@ const updateJobHandler = async (request, h) => {
             }).code(boomError.output.statusCode);
         }
 
-        const costRegex = /^\d+$/;
-        if (!costRegex.test(cost)) {
-            const boomError = Boom.badRequest('Cost must contain only numeric characters (0-9),');
-            return h.response({
-                status: boomError.output.statusCode,
-                message: boomError.message,
-                error: true,
-            }).code(boomError.output.statusCode);
-        }
-
         const customer = await customersModule.findCustomerByUserId(userId);
         if (!customer) {
             const boomError = Boom.notFound('Customer profile not found, Please try again.');
@@ -321,6 +311,16 @@ const updateJobHandler = async (request, h) => {
             image: publicUrl,
         };
 
+        const costRegex = /^\d+$/;
+        if (!costRegex.test(updatedJob.cost)) {
+            const boomError = Boom.badRequest('Cost must contain only numeric characters (0-9),');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
         await jobsService.updateJob(job_id, updatedJob, customer_id);
 
         return h.response({
@@ -329,7 +329,7 @@ const updateJobHandler = async (request, h) => {
             error: false,
         }).code(200);
     } catch (error) {
-        const boomError = Boom.badImplementation(error.message);
+        const boomError = Boom.badRequest(error.message);
         return h.response({
             status: boomError.output.statusCode,
             message: boomError.message,
@@ -567,6 +567,36 @@ const getPendingJobsHandler = async (request, h) => {
     }
 };
 
+const getJobDetailHandler = async (request, h) => {
+    try {
+        const { job_id } = request.params;
+        const job = await jobsService.getJobById(job_id);
+
+        if (!job) {
+            const boomError = Boom.notFound('Job not found, Please check your job id.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        return h.response({
+            status: 200,
+            message: 'Job details retrieved successfully',
+            data: job,
+            error: false,
+        }).code(200);
+    } catch (error) {
+        const boomError = Boom.badRequest(error.message);
+        return h.response({
+            status: boomError.output.statusCode,
+            message: boomError.message,
+            error: true,
+        }).code(boomError.output.statusCode);
+    }
+};
+
 module.exports = {
     createJobHandler,
     getJobsHandler,
@@ -577,5 +607,6 @@ module.exports = {
     completeJobHandler,
     cancelOverdueJobsHandler,
     getPendingJobsHandler,
-    getAllJobsHandler
+    getAllJobsHandler,
+    getJobDetailHandler
 };

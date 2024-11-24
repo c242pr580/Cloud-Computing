@@ -19,13 +19,13 @@ const findCustomerByUserId = async (userId) => {
     return snapshot.empty ? null : { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
 };
 
-const findMitraByUserId = async (user_id) => {
-    const snapshot = await mitrasCollection.where('user_id', '==', user_id).get();
+const findMitraByUserId = async (userId) => {
+    const snapshot = await mitrasCollection.where('user_id', '==', userId).get();
     return snapshot.empty ? null : { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
 };
 
 module.exports = {
     findUserByEmail,
     findCustomerByUserId,
-    findMitraByUserId
+    findMitraByUserId,
 };

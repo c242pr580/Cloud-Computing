@@ -1,4 +1,6 @@
 const userService = require('../user/user.service');
+const customersModule = require('../customer/customers.module');
+const mitrasModule = require('../mitra/mitras.module');
 const Boom = require('@hapi/boom');
 const { uploadFileToCloudStorage } = require('../server/storage');
 
@@ -106,7 +108,7 @@ const updateUserBiodataHandler = async (request, h) => {
             error: false,
         }).code(200);
     } catch (error) {
-        const boomError = Boom.badImplementation(error.message);
+        const boomError = Boom.badRequest(error.message);
         return h.response({
             status: boomError.output.statusCode,
             message: boomError.message,
@@ -115,7 +117,90 @@ const updateUserBiodataHandler = async (request, h) => {
     }
 };
 
+const getUserDetailByCustomerIdHandler = async (request, h) => {
+    try {
+        const { customer_id } = request.params;
+
+        const customer = await customersModule.findCustomerById(customer_id);
+        if (!customer) {
+            const boomError = Boom.notFound('Customer not found, Please check your customer id.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        const user = await userService.getUserById(customer.user_id);
+        if (!user) {
+            const boomError = Boom.notFound('User not found for the given customer id, Please try again.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+        const { password, ...filterData } = user;
+        return h.response({
+            status: 200,
+            message: 'User details retrieved successfully',
+            data: filterData,
+            error: false,
+        }).code(200);
+    } catch (error) {
+        const boomError = Boom.badRequest(error.message);
+        return h.response({
+            status: boomError.output.statusCode,
+            message: boomError.message,
+            error: true,
+        }).code(boomError.output.statusCode);
+    }
+};
+
+const getUserDetailByMitraIdHandler = async (request, h) => {
+    try {
+        const { mitra_id } = request.params;
+
+        const mitra = await mitrasModule.findMitraById(mitra_id);
+        if (!mitra) {
+            const boomError = Boom.notFound('Mitra not found, Please check your mitra id.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        const user = await userService.getUserById(mitra.user_id);
+        if (!user) {
+            const boomError = Boom.notFound('User not found for the given mitra id, Please try again.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+        const { password, ...filterData } = user;
+        return h.response({
+            status: 200,
+            message: 'User details retrieved successfully',
+            data: filterData,
+            error: false,
+        }).code(200);
+    } catch (error) {
+        const boomError = Boom.badRequest(error.message);
+        return h.response({
+            status: boomError.output.statusCode,
+            message: boomError.message,
+            error: true,
+        }).code(boomError.output.statusCode);
+    }
+};
+
+
 module.exports = {
     getUserBiodataHandler,
-    updateUserBiodataHandler
+    updateUserBiodataHandler,
+    getUserDetailByCustomerIdHandler,
+    getUserDetailByMitraIdHandler
 };
