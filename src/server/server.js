@@ -1,21 +1,30 @@
+require('dotenv').config();
 const Hapi = require('@hapi/hapi');
-const { loadFRModel } = require('../face-recognition/face-recognition.loadModel');
-const { loadNLPModel } = require('../nlp/nlp.loadModel');
-const faceRecognitionRoutes = require('../routes/face-recognition.route');
+const { loadNLPModel } = require('../nlp/nlp.module');
+const NLPRoutes = require('../routes/nlp.route');
 
 (async () => {
-    console.log('model loaded!');
     const server = Hapi.server({
         host: process.env.NODE_ENV !== 'production' ? 'localhost' : '0.0.0.0',
-        port: 3000
+        port: process.env.PORT
     });
 
-    const frmodel = await loadFRModel();
-    const nlpmodel = await loadNLPModel();
+    try {
+        const nlpmodel = await loadNLPModel();
+        server.app.nlpmodel = nlpmodel;
+    } catch (error) {
+        throw new Error('failed to load model');
+    }
 
-    server.app.frmodel = frmodel;
-    server.app.nlpmodel = nlpmodel;
-    server.route(faceRecognitionRoutes);
+    server.route(NLPRoutes);
+
+    server.route({
+        method: '*',
+        path: '/{any*}',
+        handler: (request, h) => {
+            return 'Page not found';
+        }
+    });
 
     await server.start();
 

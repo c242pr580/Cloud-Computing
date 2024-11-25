@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start-prod": "NODE_ENV=production node src/app.js",
+    "start:dev": "nodemon ./src/server/server.js",
     "start": "node src/server/server.js"
   },
   "keywords": [],
@@ -12,8 +12,12 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@hapi/boom": "^10.0.1",
     "@hapi/hapi": "^21.3.12",
     "@tensorflow/tfjs-node": "^4.22.0",
     "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
   }
 }
