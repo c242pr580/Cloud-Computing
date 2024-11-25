@@ -2,8 +2,8 @@ const { predict } = require('./face-recognition.inference');
 
 const faceRecognitionHandler = async (request) => {
     const { image } = request.payload;
-    const { model } = request.server.app;
-    const predictions = await predict(model, image);
+    const { frmodel } = request.server.app;
+    const predictions = await predict(frmodel, image);
     return { result: predictions};
 };
 
