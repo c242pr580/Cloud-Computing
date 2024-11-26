@@ -16,17 +16,17 @@ const loadVocabulary = async () => {
 
         return vocabulary;
     } catch (error) {
-        throw new Error('Failed to load vocabulary');
+        throw new Error('Failed to load vocabulary.');
     }
 }
 
 const vectorizeText = (inputText, vocabulary, maxLength) => {
     if (vocabulary.length === 0) {
-        throw new Error('Vocabulary kosong. Pastikan vocab berhasil dimuat.');
+        throw new Error('Vocabulary is empty. Make sure the vocabulary has been loaded.');
     }
     
     if (!inputText.trim()) {
-        throw new Error('Input teks kosong atau tidak valid.');
+        throw new Error('Invalid/empty text.');
     }
     
     const tokens = inputText

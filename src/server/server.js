@@ -13,7 +13,7 @@ const NLPRoutes = require('../routes/nlp.route');
         const nlpmodel = await loadNLPModel();
         server.app.nlpmodel = nlpmodel;
     } catch (error) {
-        throw new Error('failed to load model');
+        throw new Error('Failed to load model.');
     }
 
     server.route(NLPRoutes);
@@ -22,7 +22,7 @@ const NLPRoutes = require('../routes/nlp.route');
         method: '*',
         path: '/{any*}',
         handler: (request, h) => {
-            return 'Page not found';
+            return 'Page not found.';
         }
     });
 

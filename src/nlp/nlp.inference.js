@@ -13,7 +13,7 @@ async function predict(model, title) {
         const label = result[0] >= threshold ? "Legal" : "Illegal";
         return label;
     } catch (error) {
-        throw new Error("Failed to predict");
+        throw new Error("Failed to predict.");
     }
 }
 
