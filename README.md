@@ -267,6 +267,7 @@
             "mitra_id": "mitra-6c415957-115b-478d-8b23-0288aeff7bc8",
             "order_id": "order-09839d9e-a912-47fa-9e9e-6661407c405e",
             "completedAt": "2024-11-24 01:27:37",
+            "rating": "3",
             "status": "Completed"
         },
         {
@@ -342,6 +343,8 @@
 - **Method**: `POST`
 - **Auth required**: `YES`
 - **Role required**: `Customer`
+- **Request Body**:
+  - `rating` as `number` - `Rating A Jobs`
 - **Response**:
 
 ```json
