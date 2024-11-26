@@ -32,6 +32,14 @@ const getUserBiodataHandler = async (request, h) => {
 };
 
 const updateUserBiodataHandler = async (request, h) => {
+    if (!request.payload || Object.keys(request.payload).length === 0) {
+        const boomError = Boom.badRequest('Request payload cannot be empty.');
+        return h.response({
+            status: boomError.output.statusCode,
+            message: boomError.message,
+            error: true,
+        }).code(boomError.output.statusCode);
+    }
     try {
         const { userId } = request.auth.credentials;
         const { location, name, phone } = request.payload;
@@ -196,7 +204,6 @@ const getUserDetailByMitraIdHandler = async (request, h) => {
         }).code(boomError.output.statusCode);
     }
 };
-
 
 module.exports = {
     getUserBiodataHandler,

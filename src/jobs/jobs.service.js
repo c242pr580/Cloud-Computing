@@ -73,6 +73,21 @@ const assignJob = async (job_id, mitra_id) => {
     return updatedJob;
 };
 
+const addRatingToJob = async (job_id, rating) => {
+    const job = await jobsModule.findJobById(job_id);
+    if (!job) {
+        throw new Error('Job not found, Please check your job id.');
+    }
+
+    const updatedJob = {
+        ...job,
+        rating
+    };
+
+    await jobsModule.updateJobById(job_id, updatedJob);
+    return updatedJob;
+};
+
 const completeJob = async (job_id) => {
     const job = await jobsModule.findJobById(job_id);
 
@@ -104,6 +119,7 @@ const checkAndCancelOverdueJobs = async () => {
 
     return canceledJobs;
 };
+
 const getAllJobs = async () => {
     return await jobsModule.getAllJobs();
 };
@@ -124,5 +140,6 @@ module.exports = {
     completeJob,
     checkAndCancelOverdueJobs,
     getAllJobs,
-    getPendingJobs
+    getPendingJobs,
+    addRatingToJob
 };

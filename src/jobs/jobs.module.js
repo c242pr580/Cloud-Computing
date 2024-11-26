@@ -130,6 +130,23 @@ const findJobByOrderId = async (order_id) => {
     return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))[0];
 };
 
+const findJobsByMitraIdAndStatus = async (mitra_id, status) => {
+    const snapshot = await jobsCollection
+        .where('mitra_id', '==', mitra_id)
+        .where('status', '==', status)
+        .get();
+
+    if (snapshot.empty) {
+        return [];
+    }
+
+    const jobs = [];
+    snapshot.forEach((doc) => {
+        jobs.push({ id: doc.id, ...doc.data() });
+    });
+
+    return jobs;
+};
 
 
 module.exports = {
@@ -143,5 +160,6 @@ module.exports = {
     getAllJobs,
     getPendingJobs,
     updateJobWithOrderId,
-    findJobByOrderId
+    findJobByOrderId,
+    findJobsByMitraIdAndStatus
 };

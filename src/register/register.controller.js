@@ -2,6 +2,14 @@ const registerService = require('../register/register.service');
 const Boom = require('@hapi/boom');
 
 const registerHandler = async (request, h) => {
+    if (!request.payload || Object.keys(request.payload).length === 0) {
+        const boomError = Boom.badRequest('Request payload cannot be empty.');
+        return h.response({
+            status: boomError.output.statusCode,
+            message: boomError.message,
+            error: true,
+        }).code(boomError.output.statusCode);
+    }
     try {
         const allowedParams = ['username', 'name', 'email', 'password', 'location', 'phone', 'role_id'];
         const payloadKeys = Object.keys(request.payload);
@@ -44,7 +52,7 @@ const registerHandler = async (request, h) => {
             }).code(boomError.output.statusCode);
         }
 
-        const phoneRegex = /^(\+?\d{1,3})?(\d{8,15})$/;
+        const phoneRegex = /^(\+?\d{1,3})?\d{8,15}$/;
         if (!phoneRegex.test(phone)) {
             const boomError = Boom.badRequest('Invalid phone number format, Please use format +0123456789 or 08123456789.');
             return h.response({

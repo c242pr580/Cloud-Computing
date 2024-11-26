@@ -13,7 +13,7 @@ const addCustomer = async (customerData) => {
     const customerRef = customersCollection.doc(customerData.customer_id);
     await customerRef.set(customerData);
     return { id: customerRef.id, ...customerData };
-};
+}; 
 
 const addMitra = async (mitraData) => {
     const mitraRef = mitrasCollection.doc(mitraData.mitra_id);

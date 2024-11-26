@@ -2,6 +2,14 @@ const transactionsService = require('../transaction/transactions.service');
 const Boom = require('@hapi/boom');
 
 const createPaymentHandler = async (request, h) => {
+    if (!request.payload || Object.keys(request.payload).length === 0) {
+        const boomError = Boom.badRequest('Request payload cannot be empty.');
+        return h.response({
+            status: boomError.output.statusCode,
+            message: boomError.message,
+            error: true,
+        }).code(boomError.output.statusCode);
+    }
     try {
         const { userId } = request.auth.credentials;
         const { job_id } = request.payload;
