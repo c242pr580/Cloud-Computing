@@ -22,7 +22,7 @@ const NLPRoutes = require('../routes/nlp.route');
         method: '*',
         path: '/{any*}',
         handler: (request, h) => {
-            return 'Page not found.';
+            return 'Hello World! This is Backend Model NLP Api SerabutInn.';
         }
     });
 
