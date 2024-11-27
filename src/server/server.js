@@ -5,8 +5,8 @@ const NLPRoutes = require('../routes/nlp.route');
 
 (async () => {
     const server = Hapi.server({
-        host: process.env.NODE_ENV !== 'production' ? 'localhost' : '0.0.0.0',
-        port: process.env.PORT
+        host: '0.0.0.0',
+        port: process.env.PORT_NLP || 8080,
     });
 
     try {
