@@ -47,5 +47,7 @@ Cloud Computing member is responsible for the development of the API service and
 - Mulia Rahmah
 #### Individuals
 
-  <img src="https://contrib.rocks/image?repo=c242pr580/Cloud-Computing" style="margin-right: 10px;" />
+<div style="display: grid; grid-template-columns: auto auto; gap: 10px;">
+ <img src="https://contrib.rocks/image?repo=c242pr580/Cloud-Computing" />
   <img src="image/yusuf.png" width="64" height="64" />
+</div>
