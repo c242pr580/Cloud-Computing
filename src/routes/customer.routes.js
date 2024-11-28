@@ -1,6 +1,7 @@
 const { verifyCustomer } = require('../middleware/customer.middleware');
 const { createJobHandler, getJobsHandler, deleteJobHandler, updateJobHandler, completeJobHandler, addRatingHandler } = require('../jobs/jobs.controller');
 const { createPaymentHandler, handlePaymentNotification } = require('../transaction/transactions.controller');
+const { validateTitle } = require('../models/models.controller')
 
 module.exports = [
     {
@@ -13,6 +14,15 @@ module.exports = [
         handler: (request, h) => {
             return { message: 'Welcome to the customer dashboard!' };
         },
+    },
+    {
+        method: 'POST',
+        path: '/customer/validate/jobs',
+        options: {
+            auth: 'jwt',
+            pre: [verifyCustomer],
+        },
+        handler: validateTitle,
     },
     {
         method: 'POST',

@@ -117,6 +117,22 @@
     "error": false
 }
 ```
+### Validate Title With Model NLP
+
+- **URL**: `/customer/validate/jobs`
+- **Method**: `POST`
+- **Request Body**:
+  - `title` as `string` - `Title A Jobs`
+- **Response**:
+
+```json
+{
+    "status": 200,
+    "message": "Validate your jobs successfully",
+    "result": "Legal",
+    "error": false
+}
+```
 ### Create A Jobs
 
 - **URL**: `/customer/jobs/create`

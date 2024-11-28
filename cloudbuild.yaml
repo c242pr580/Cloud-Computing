@@ -1,10 +1,10 @@
 steps:
 
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/serabutinn', '.']
+    args: ['build', '-t', 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/serabutinn/serabutinn', '.']
   
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/$PROJECT_ID/serabutinn']
+    args: ['push', 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/serabutinn/serabutinn']
   
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
@@ -13,7 +13,7 @@ steps:
       - 'deploy'
       - 'serabutinn'
       - '--image'
-      - 'gcr.io/$PROJECT_ID/serabutinn'
+      - 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/serabutinn/serabutinn'
       - '--region'
       - '${_REGION}'
       - '--platform'
@@ -22,7 +22,7 @@ steps:
       - '--set-env-vars'
       - 'PROJECT_ID=${PROJECT_ID}'
       - '--set-secrets'
-      - 'JWT_SECRET=JWT_SECRET:latest,JWT_AUD=JWT_AUD:latest,JWT_ISS=JWT_ISS:latest,JWT_SUB=JWT_SUB:latest,JWT_EXPIRES_IN=JWT_EXPIRES_IN:latest,MIDTRANS_SERVER_KEY=MIDTRANS_SERVER_KEY:latest,MIDTRANS_CLIENT_KEY=MIDTRANS_CLIENT_KEY:latest,PROFILE_PICTURE_DEFAULT=PROFILE_PICTURE_DEFAULT:latest,BUCKET_NAME=BUCKET_NAME:latest'
+      - 'JWT_SECRET=JWT_SECRET:latest,JWT_AUD=JWT_AUD:latest,JWT_ISS=JWT_ISS:latest,JWT_SUB=JWT_SUB:latest,JWT_EXPIRES_IN=JWT_EXPIRES_IN:latest,MIDTRANS_SERVER_KEY=MIDTRANS_SERVER_KEY:latest,MIDTRANS_CLIENT_KEY=MIDTRANS_CLIENT_KEY:latest,PROFILE_PICTURE_DEFAULT=PROFILE_PICTURE_DEFAULT:latest,BUCKET_NAME=BUCKET_NAME:latest,EXTERNAL_API_URL=EXTERNAL_API_URL:latest'
 
 options:
   logging: CLOUD_LOGGING_ONLY
@@ -31,4 +31,4 @@ substitutions:
   _REGION: asia-southeast2
 
 images:
-  - 'gcr.io/$PROJECT_ID/serabutinn'
+  - 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/serabutinn/serabutinn'
