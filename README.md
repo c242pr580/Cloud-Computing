@@ -1,3 +1,8 @@
+<p align="center">
+  <img src="image/serabutinn.png" alt="SerabutInn logo" height="180" />
+</p>
+
+
 # WEB Server API SerabutInn
 > Capstone Project C242-PR580
 
@@ -659,3 +664,17 @@
     "error": false
 }
 ```
+## Contributors
+
+### Cloud Computing Member
+Cloud Computing member is responsible for the development of the API service and deployment of the model. In sort, in this project Cloud Computing is responsible for Backend, Infrastructure, and DevOps.
+
+- Louis Michael
+- Muhammad Baharuddin Yusuf
+- Mulia Rahmah
+#### Individuals
+
+<div style="display: grid; grid-template-columns: auto auto; gap: 10px;">
+ <img src="https://contrib.rocks/image?repo=c242pr580/Cloud-Computing" />
+  <img src="image/yusuf.png" width="64" height="64" />
+</div>
