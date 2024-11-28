@@ -9,7 +9,12 @@ bp = Blueprint('facialrecognition', __name__)
 @bp.route("/upload100image", methods=['POST'])
 def upload():
     if 'files[]' not in request.files:
-        return jsonify({"error": "No file part"}), 400
+        response = {
+            "status": 400,
+            "message": "No file part",
+            "error": True
+        }
+        return jsonify(response), 400
 
     files = request.files.getlist('files[]')
     customer_id = request.form.get('customer_id')
@@ -33,21 +38,52 @@ def upload():
                 uploaded_files.append(file.filename)
                 os.remove(file_path)
             except Exception as e:
-                return jsonify({"error": f"Failed to upload {file.filename}: {str(e)}"}), 500
+                response = {
+                    "status": 500,
+                    "message": f"Failed to upload {file.filename}: {str(e)}",
+                    "error": True
+                }
+                return jsonify(response), 500
 
-    return jsonify({"uploaded_files": uploaded_files})
+    response = {
+        "status": 201,
+        "message": "Uploaded files successfully",
+        "data": {
+            "uploaded_files": uploaded_files,
+        },
+        "error": False,
+    }
+    return jsonify(response)
 
 @bp.route("/predict", methods=["POST"])
 def predict():
     try:
         if 'file' not in request.files:
-            return jsonify({"error": "No file part"}), 400
+            response = {
+                "status": 400,
+                "message": "No file part",
+                "error": True
+            }
+            return jsonify(response), 400
 
         img = request.files['file']
         customer_id = request.form.get('customer_id')
 
+        if not allowed_file(img):
+            response = {
+                "status": 400,
+                "message": "Unsupported media type.",
+                "error": True
+            }
+            return jsonify(response), 400
+
         if img.filename == '':
-            return jsonify({"error": "No selected file"}), 400
+            response = {
+                "status": 400,
+                "message": "No selected file",
+                "error": True
+            }
+            return jsonify(response), 400
 
         input_image_path = 'temp_input.jpg'
 
@@ -64,7 +100,7 @@ def predict():
             for image in os.listdir(current_app.config['UPLOAD_FOLDER']):
                 input_img = preprocess(input_image_path)
                 # validation_img = preprocess(os.path.join(current_app.config['UPLOAD_FOLDER'], image))
-                result = model.predict([np.expand_dims(input_img, axis=0), np.expand_dims(validation_img, axis=0)])
+                result = model.predict([np.expand_dims(input_img, axis=0), np.expand_dims(image, axis=0)])
                 results.append(result)
 
             files = os.listdir(current_app.config['UPLOAD_FOLDER'])
@@ -80,8 +116,13 @@ def predict():
             verified = verification > verification_threshold
 
             response = {
-                "verified": bool(verified),
-                "verification_score": float(verification)
+                "status": 200,
+                "message": "Model predicted successfully",
+                "data": {
+                    "verified": bool(verified),
+                    "verification_score": float(verification)
+                },
+                "error": False
             }
             return jsonify(response)
 
@@ -91,4 +132,9 @@ def predict():
 
     except Exception as e:
         error_message = str(e).encode('utf-8', 'ignore').decode('utf-8')
-        return jsonify({"error": error_message}), 500
+        response = {
+            "status": 500,
+            "message": error_message,
+            "error": True
+        }
+        return jsonify(response), 500
