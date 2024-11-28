@@ -24,6 +24,11 @@ def upload():
                 file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
                 file.save(file_path)
 
+                preprocessed_img = preprocess(file_path)
+                os.remove(file_path)
+
+                preprocessed_img.save(file_path)
+
                 upload_image_to_gcs(current_app.config['VERIFICATION_IMG_BUCKET'], file_path, customer_id)
                 uploaded_files.append(file.filename)
                 os.remove(file_path)
@@ -58,7 +63,7 @@ def predict():
             model = getModel()
             for image in os.listdir(current_app.config['UPLOAD_FOLDER']):
                 input_img = preprocess(input_image_path)
-                validation_img = preprocess(os.path.join(current_app.config['UPLOAD_FOLDER'], image))
+                # validation_img = preprocess(os.path.join(current_app.config['UPLOAD_FOLDER'], image))
                 result = model.predict([np.expand_dims(input_img, axis=0), np.expand_dims(validation_img, axis=0)])
                 results.append(result)
 
