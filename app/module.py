@@ -16,20 +16,20 @@ def preprocess(file_path):
     img = img / 255.0  # Normalisasi
     return img
 
-def getModel():
+async def getModel():
     if not Path(Config.LOCAL_MODEL_PATH).is_file():
         print("Downloading model...")
-    response = requests.get(Config.MODEL_URL, stream=True)
-    if response.status_code == 200:
-        with open(Config.LOCAL_MODEL_PATH, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
+        response = requests.get(Config.MODEL_URL, stream=True)
+        if response.status_code == 200:
+            with open(Config.LOCAL_MODEL_PATH, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
-        print("Model downloaded successfully.")
-    else:
-        raise Exception(f"Failed to download model: {response.status_code}")
-
+            print("Model downloaded successfully.")
+        else:
+            raise Exception(f"Failed to download model: {response.status_code}")
+        
     # Load model
-    model = tf.keras.models.load_model(Config.LOCAL_MODEL_PATH, custom_objects={'L1Dist': L1Dist})
+    model = await tf.keras.models.load_model(Config.LOCAL_MODEL_PATH, custom_objects={'L1Dist': L1Dist})
     return model
 
 class L1Dist(Layer):
