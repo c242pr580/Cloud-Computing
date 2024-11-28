@@ -48,7 +48,7 @@ def predict():
             results = []
             model = getModel()
             for image in os.listdir(current_app.config['UPLOAD_FOLDER']):
-                print(current_app.config['UPLOAD_FOLDER']) 
+                print(current_app.config['UPLOAD_FOLDER'])
                 input_img = preprocess(input_image_path)
                 validation_img = preprocess(os.path.join(current_app.config['UPLOAD_FOLDER'], image))
                 result = model.predict([np.expand_dims(input_img, axis=0), np.expand_dims(validation_img, axis=0)])

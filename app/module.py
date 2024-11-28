@@ -3,7 +3,6 @@ from tensorflow.keras.layers import Layer
 from pathlib import Path
 import tensorflow as tf
 import requests
-import os
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
@@ -16,7 +15,7 @@ def preprocess(file_path):
     img = img / 255.0  # Normalisasi
     return img
 
-async def getModel():
+def getModel():
     if not Path(Config.LOCAL_MODEL_PATH).is_file():
         print("Downloading model...")
         response = requests.get(Config.MODEL_URL, stream=True)
@@ -29,7 +28,7 @@ async def getModel():
             raise Exception(f"Failed to download model: {response.status_code}")
         
     # Load model
-    model = await tf.keras.models.load_model(Config.LOCAL_MODEL_PATH, custom_objects={'L1Dist': L1Dist})
+    model = tf.keras.models.load_model(Config.LOCAL_MODEL_PATH, custom_objects={'L1Dist': L1Dist})
     return model
 
 class L1Dist(Layer):
