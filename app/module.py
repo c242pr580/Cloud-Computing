@@ -3,6 +3,11 @@ from tensorflow.keras.layers import Layer
 from pathlib import Path
 import tensorflow as tf
 import requests
+from google.cloud import storage
+from google.auth import credentials
+from google.auth import load_credentials_from_file
+from google.auth.transport.requests import Request
+import os
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
@@ -30,6 +35,25 @@ def getModel():
     # Load model
     model = tf.keras.models.load_model(Config.LOCAL_MODEL_PATH, custom_objects={'L1Dist': L1Dist})
     return model
+
+def upload_image_to_gcs(bucket_name, image_path, folder_name):
+    credentials, project = load_credentials_from_file(Config.GOOGLE_APPLICATION_CREDENTIALS)
+
+    if credentials.expired:
+        credentials.refresh(Request())
+
+    client = storage.Client(credentials=credentials, project=project)
+    bucket = client.get_bucket(bucket_name)
+    folder_path = f"{folder_name}/"
+
+    image_filename = os.path.basename(image_path)
+
+    destination_blob_name = folder_path + image_filename
+
+    blob = bucket.blob(destination_blob_name)
+    blob.upload_from_filename(image_path)
+
+    print(f"Image {image_filename} uploaded to {destination_blob_name} in {bucket_name}.")
 
 class L1Dist(Layer):
     def __init__(self, **kwargs):

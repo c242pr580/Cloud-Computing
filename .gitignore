@@ -2,4 +2,5 @@ __pycache__
 venv
 modelfinal.h5
 .env
-verification_images
+temporary_images
+serabutinn-bc8747a6e10c.json

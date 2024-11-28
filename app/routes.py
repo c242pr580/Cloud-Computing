@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, current_app
-from .module import allowed_file, preprocess, getModel
+from .module import allowed_file, preprocess, getModel, upload_image_to_gcs
 import numpy as np
 import os
 
@@ -11,6 +11,8 @@ def upload():
         return jsonify({"error": "No file part"}), 400
 
     files = request.files.getlist('files[]')
+    customer_id = request.form.get('customer_id')
+
     uploaded_files = []
 
     for file in files:
@@ -20,6 +22,9 @@ def upload():
                 file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
                 file.save(file_path)
                 uploaded_files.append(filename)
+
+                upload_image_to_gcs(current_app.config['VERIFICATION_IMG_BUCKET'], file_path, customer_id)
+                os.remove(file_path)
             except Exception as e:
                 return jsonify({"error": f"Failed to upload {file.filename}: {str(e)}"}), 500
 
