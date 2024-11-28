@@ -1,6 +1,5 @@
 import sys
 from app import create_app
-from app.module import getModel
 
 sys.stdout.reconfigure(encoding='utf-8')
 

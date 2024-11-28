@@ -1,14 +1,14 @@
 from flask import Flask
 from .routes import bp
-import os
+from app.module import getModel
 
 def create_app():
+    getModel()
+
     app = Flask(__name__)
-    # app.config.from_object('config')
 
     app.config.from_object('config.Config')
 
-    # from .routes import bp
     app.register_blueprint(bp)
 
     return app

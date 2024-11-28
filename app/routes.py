@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app
 from .module import allowed_file, preprocess, getModel, upload_image_to_gcs
 import numpy as np
+import uuid
 import os
 
 bp = Blueprint('facialrecognition', __name__)
@@ -18,12 +19,13 @@ def upload():
     for file in files:
         if file and allowed_file(file.filename):
             try:
-                filename = file.filename
+                unique_id = uuid.uuid4().hex
+                filename = unique_id + "-" + file.filename
                 file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
                 file.save(file_path)
-                uploaded_files.append(filename)
 
                 upload_image_to_gcs(current_app.config['VERIFICATION_IMG_BUCKET'], file_path, customer_id)
+                uploaded_files.append(file.filename)
                 os.remove(file_path)
             except Exception as e:
                 return jsonify({"error": f"Failed to upload {file.filename}: {str(e)}"}), 500
@@ -53,21 +55,14 @@ def predict():
             results = []
             model = getModel()
             for image in os.listdir(current_app.config['UPLOAD_FOLDER']):
-                print(current_app.config['UPLOAD_FOLDER'])
                 input_img = preprocess(input_image_path)
                 validation_img = preprocess(os.path.join(current_app.config['UPLOAD_FOLDER'], image))
                 result = model.predict([np.expand_dims(input_img, axis=0), np.expand_dims(validation_img, axis=0)])
-                print(result)
                 results.append(result)
 
             detection = np.sum(np.array(results) > detection_threshold)
             verification = detection / len(os.listdir(current_app.config['UPLOAD_FOLDER']))
             verified = verification > verification_threshold
-
-            print("Results per image:", results)
-            print("Detection score:", detection)
-            print("Verification score:", verification)
-            print("Verified:", verified)
 
             response = {
                 "verified": bool(verified),
