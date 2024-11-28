@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, current_app
-from .module import allowed_file, preprocess, getModel, upload_image_to_gcs
+from .module import allowed_file, preprocess, getModel, upload_image_to_gcs, download_images_from_gcs_folder
 import numpy as np
 import uuid
 import os
@@ -39,6 +39,7 @@ def predict():
             return jsonify({"error": "No file part"}), 400
 
         img = request.files['file']
+        customer_id = request.form.get('customer_id')
 
         if img.filename == '':
             return jsonify({"error": "No selected file"}), 400
@@ -48,9 +49,10 @@ def predict():
         try:
             img.save(input_image_path)
 
-            # Adjust threshold for testing
             detection_threshold = 0.6
             verification_threshold = 0.7
+
+            download_images_from_gcs_folder(current_app.config['VERIFICATION_IMG_BUCKET'], customer_id+"/")
 
             results = []
             model = getModel()
@@ -59,6 +61,14 @@ def predict():
                 validation_img = preprocess(os.path.join(current_app.config['UPLOAD_FOLDER'], image))
                 result = model.predict([np.expand_dims(input_img, axis=0), np.expand_dims(validation_img, axis=0)])
                 results.append(result)
+
+            files = os.listdir(current_app.config['UPLOAD_FOLDER'])
+
+            for file_name in files:
+                file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], file_name)
+
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
 
             detection = np.sum(np.array(results) > detection_threshold)
             verification = detection / len(os.listdir(current_app.config['UPLOAD_FOLDER']))

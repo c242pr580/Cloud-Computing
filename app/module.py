@@ -4,7 +4,6 @@ from pathlib import Path
 import tensorflow as tf
 import requests
 from google.cloud import storage
-from google.auth import credentials
 from google.auth import load_credentials_from_file
 from google.auth.transport.requests import Request
 import os
@@ -54,6 +53,25 @@ def upload_image_to_gcs(bucket_name, image_path, folder_name):
     blob.upload_from_filename(image_path)
 
     print(f"Image {image_filename} uploaded to {destination_blob_name} in {bucket_name}.")
+
+def download_images_from_gcs_folder(bucket_name, folder_name):
+    credentials, project = load_credentials_from_file(Config.GOOGLE_APPLICATION_CREDENTIALS)
+
+    if credentials.expired:
+        credentials.refresh(Request())
+
+    client = storage.Client(credentials=credentials, project=project)
+    bucket = client.get_bucket(bucket_name)
+
+    blobs = bucket.list_blobs(prefix=folder_name)
+
+    for blob in blobs:
+        if blob.name.endswith('/'):
+            continue
+
+        local_path = os.path.join(Config.UPLOAD_FOLDER, os.path.basename(blob.name))
+
+        blob.download_to_filename(local_path)
 
 class L1Dist(Layer):
     def __init__(self, **kwargs):
