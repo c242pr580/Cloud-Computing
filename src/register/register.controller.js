@@ -24,7 +24,7 @@ const registerHandler = async (request, h) => {
         }
 
         const { username, name, email, password, location, phone, role_id } = request.payload;
-        if (!username || !name || !email || /\r|\n/.test(email) || !password || !location || !phone || !role_id) {
+        if (!username || !name || !email || !password || !location || !phone || !role_id) {
             const boomError = Boom.badRequest('Please provide all required fields.');
             return h.response({
                 status: boomError.output.statusCode,
@@ -34,7 +34,7 @@ const registerHandler = async (request, h) => {
         }
 
         const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-        if (!emailRegex.test(email)) {
+        if (!emailRegex.test(email) || /\r|\n/.test(email)) {
             const boomError = Boom.badRequest('The email format is invalid, Please enter a valid email address.');
             return h.response({
                 status: boomError.output.statusCode,
