@@ -11,12 +11,18 @@ import os
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
 
-# Preprocessing function
+def file_too_large(file):
+    file.seek(0, 2)
+    file_length = file.tell()
+    file.seek(0)
+
+    return file_length > 2 * 1024 * 1024
+
 def preprocess(file_path):
     byte_img = tf.io.read_file(file_path)
     img = tf.io.decode_jpeg(byte_img)
-    img = tf.image.resize(img, (105, 105))  # Resize sesuai dengan ukuran input model
-    img = img / 255.0  # Normalisasi
+    img = tf.image.resize(img, (105, 105))
+    img = img / 255.0
     return img
 
 def getModel():
@@ -31,7 +37,6 @@ def getModel():
         else:
             raise Exception(f"Failed to download model: {response.status_code}")
         
-    # Load model
     model = tf.keras.models.load_model(Config.LOCAL_MODEL_PATH, custom_objects={'L1Dist': L1Dist})
     return model
 

@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, current_app
-from .module import allowed_file, preprocess, getModel, upload_image_to_gcs, download_images_from_gcs_folder
+from .module import allowed_file, preprocess, getModel, upload_image_to_gcs, download_images_from_gcs_folder, file_too_large
 import numpy as np
 import uuid
 import os
@@ -31,7 +31,7 @@ def upload():
         uploaded_images = []
 
         for image in images:
-            if image and allowed_file(image.filename):
+            if image and allowed_file(image.filename) and not file_too_large(image):
                 try:
                     unique_id = uuid.uuid4().hex
                     filename = image.filename
@@ -95,6 +95,14 @@ def predict():
 
         img = request.files['image']
         customer_id = request.form.get('customer_id')
+        
+        if file_too_large(img):
+            response = {
+                "status": 400,
+                "message": "File too large.",
+                "error": True
+            }
+            return jsonify(response), 400
 
         if not allowed_file(img):
             response = {
@@ -112,7 +120,7 @@ def predict():
             }
             return jsonify(response), 400
 
-        input_image_path = 'temp_input.jpg'
+        input_image_path = img.filename
 
         try:
             img.save(input_image_path)
@@ -153,6 +161,15 @@ def predict():
                 "error": False
             }
             return jsonify(response)
+
+        except Exception as e:
+            error_message = str(e).encode('utf-8', 'ignore').decode('utf-8')
+            response = {
+                "status": 500,
+                "message": error_message,
+                "error": True
+            }
+            return jsonify(response), 500
 
         finally:
             if os.path.exists(input_image_path):

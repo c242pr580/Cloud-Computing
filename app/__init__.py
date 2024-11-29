@@ -12,6 +12,14 @@ def create_app():
 
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
+    else:
+        files = os.listdir(app.config['UPLOAD_FOLDER'])
+
+        for file_name in files:
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], file_name)
+
+            if os.path.isfile(file_path):
+                os.remove(file_path)
 
     app.register_blueprint(bp)
 
