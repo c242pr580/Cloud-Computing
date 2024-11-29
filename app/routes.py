@@ -6,67 +6,94 @@ import os
 
 bp = Blueprint('facialrecognition', __name__)
 
-@bp.route("/upload100image", methods=['POST'])
+@bp.route("/upload-verification-images", methods=['POST'])
 def upload():
-    if 'files[]' not in request.files:
-        response = {
-            "status": 400,
-            "message": "No file part",
-            "error": True
-        }
-        return jsonify(response), 400
-
-    files = request.files.getlist('files[]')
-    customer_id = request.form.get('customer_id')
-
-    uploaded_files = []
-
-    for file in files:
-        if file and allowed_file(file.filename):
-            try:
-                unique_id = uuid.uuid4().hex
-                filename = unique_id + "-" + file.filename
-                file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-                file.save(file_path)
-
-                preprocessed_img = preprocess(file_path)
-                os.remove(file_path)
-
-                preprocessed_img.save(file_path)
-
-                upload_image_to_gcs(current_app.config['VERIFICATION_IMG_BUCKET'], file_path, customer_id)
-                uploaded_files.append(file.filename)
-                os.remove(file_path)
-            except Exception as e:
-                response = {
-                    "status": 500,
-                    "message": f"Failed to upload {file.filename}: {str(e)}",
-                    "error": True
-                }
-                return jsonify(response), 500
-
-    response = {
-        "status": 201,
-        "message": "Uploaded files successfully",
-        "data": {
-            "uploaded_files": uploaded_files,
-        },
-        "error": False,
-    }
-    return jsonify(response)
-
-@bp.route("/predict", methods=["POST"])
-def predict():
     try:
-        if 'file' not in request.files:
+        if 'images[]' not in request.files:
             response = {
                 "status": 400,
-                "message": "No file part",
+                "message": "No images provided",
                 "error": True
             }
             return jsonify(response), 400
 
-        img = request.files['file']
+        if 'customer_id' not in request.files:
+            response = {
+                "status": 400,
+                "message": "No customer_id provided",
+                "error": True
+            }
+            return jsonify(response), 400
+
+        images = request.files.getlist('images[]')
+        customer_id = request.form.get('customer_id')
+
+        uploaded_images = []
+
+        for image in images:
+            if image and allowed_file(image.filename):
+                try:
+                    unique_id = uuid.uuid4().hex
+                    filename = image.filename
+                    image_name = unique_id + "-" + filename
+                    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], image_name)
+                    image.save(file_path)
+
+                    preprocessed_img = preprocess(file_path)
+                    os.remove(file_path)
+
+                    preprocessed_img.save(file_path)
+
+                    upload_image_to_gcs(current_app.config['VERIFICATION_IMG_BUCKET'], file_path, customer_id)
+                    uploaded_images.append(filename)
+
+                    os.remove(file_path)
+                except Exception as e:
+                    response = {
+                        "status": 500,
+                        "message": f"Failed to upload {filename}: {str(e)}",
+                        "error": True
+                    }
+                    return jsonify(response), 500
+
+        response = {
+            "status": 201,
+            "message": "Uploaded verification images successfully successfully",
+            "data": {
+                "uploaded_images": uploaded_images,
+            },
+            "error": False,
+        }
+        return jsonify(response)
+    except Exception as e:
+        error_message = str(e).encode('utf-8', 'ignore').decode('utf-8')
+        response = {
+            "status": 500,
+            "message": error_message,
+            "error": True
+        }
+        return jsonify(response), 500
+
+@bp.route("/predict", methods=["POST"])
+def predict():
+    try:
+        if 'image' not in request.files:
+            response = {
+                "status": 400,
+                "message": "No image provided",
+                "error": True
+            }
+            return jsonify(response), 400
+        
+        if 'customer_id' not in request.files:
+            response = {
+                "status": 400,
+                "message": "No customer_id provided",
+                "error": True
+            }
+            return jsonify(response), 400
+
+        img = request.files['image']
         customer_id = request.form.get('customer_id')
 
         if not allowed_file(img):
@@ -96,6 +123,7 @@ def predict():
             download_images_from_gcs_folder(current_app.config['VERIFICATION_IMG_BUCKET'], customer_id+"/")
 
             results = []
+            
             model = getModel()
             for image in os.listdir(current_app.config['UPLOAD_FOLDER']):
                 input_img = preprocess(input_image_path)
@@ -103,6 +131,10 @@ def predict():
                 result = model.predict([np.expand_dims(input_img, axis=0), np.expand_dims(image, axis=0)])
                 results.append(result)
 
+            detection = np.sum(np.array(results) > detection_threshold)
+            verification = detection / len(os.listdir(current_app.config['UPLOAD_FOLDER']))
+            verified = verification > verification_threshold
+            
             files = os.listdir(current_app.config['UPLOAD_FOLDER'])
 
             for file_name in files:
@@ -110,10 +142,6 @@ def predict():
 
                 if os.path.isfile(file_path):
                     os.remove(file_path)
-
-            detection = np.sum(np.array(results) > detection_threshold)
-            verification = detection / len(os.listdir(current_app.config['UPLOAD_FOLDER']))
-            verified = verification > verification_threshold
 
             response = {
                 "status": 200,
