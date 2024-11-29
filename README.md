@@ -50,4 +50,5 @@ Cloud Computing member is responsible for the development of the API service and
 <div style="display: grid; grid-template-columns: auto auto; gap: 10px;">
  <img src="https://contrib.rocks/image?repo=c242pr580/Cloud-Computing" />
   <img src="image/yusuf.png" width="64" height="64" />
+   <img src="image/mulia.png" width="64" height="64" />
 </div>
