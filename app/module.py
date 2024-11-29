@@ -8,7 +8,7 @@ from google.auth import load_credentials_from_file
 from google.auth.transport.requests import Request
 import os
 
-def allowed_file(filename):
+def allowed_file_extension(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
 
 def file_too_large(file):
@@ -27,13 +27,13 @@ def preprocess(file_path):
 
 def getModel():
     if not Path(Config.LOCAL_MODEL_PATH).is_file():
-        print("Downloading model...")
+        # print("Downloading model...")
         response = requests.get(Config.MODEL_URL, stream=True)
         if response.status_code == 200:
             with open(Config.LOCAL_MODEL_PATH, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
-            print("Model downloaded successfully.")
+            # print("Model downloaded successfully.")
         else:
             raise Exception(f"Failed to download model: {response.status_code}")
         
@@ -57,26 +57,26 @@ def upload_image_to_gcs(bucket_name, image_path, folder_name):
     blob = bucket.blob(destination_blob_name)
     blob.upload_from_filename(image_path)
 
-    print(f"Image {image_filename} uploaded to {destination_blob_name} in {bucket_name}.")
+    # print(f"Image {image_filename} uploaded to {destination_blob_name} in {bucket_name}.")
 
-def download_images_from_gcs_folder(bucket_name, folder_name):
-    credentials, project = load_credentials_from_file(Config.GOOGLE_APPLICATION_CREDENTIALS)
+# def download_images_from_gcs_folder(bucket_name, folder_name):
+#     credentials, project = load_credentials_from_file(Config.GOOGLE_APPLICATION_CREDENTIALS)
 
-    if credentials.expired:
-        credentials.refresh(Request())
+#     if credentials.expired:
+#         credentials.refresh(Request())
 
-    client = storage.Client(credentials=credentials, project=project)
-    bucket = client.get_bucket(bucket_name)
+#     client = storage.Client(credentials=credentials, project=project)
+#     bucket = client.get_bucket(bucket_name)
 
-    blobs = bucket.list_blobs(prefix=folder_name)
+#     blobs = bucket.list_blobs(prefix=folder_name)
 
-    for blob in blobs:
-        if blob.name.endswith('/'):
-            continue
+#     for blob in blobs:
+#         if blob.name.endswith('/'):
+#             continue
 
-        local_path = os.path.join(Config.UPLOAD_FOLDER, os.path.basename(blob.name))
+#         local_path = os.path.join(Config.UPLOAD_FOLDER, os.path.basename(blob.name))
 
-        blob.download_to_filename(local_path)
+#         blob.download_to_filename(local_path)
 
 class L1Dist(Layer):
     def __init__(self, **kwargs):

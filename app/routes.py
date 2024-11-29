@@ -1,10 +1,16 @@
 from flask import Blueprint, jsonify, request, current_app
-from .module import allowed_file, preprocess, getModel, upload_image_to_gcs, download_images_from_gcs_folder, file_too_large
+from .module import allowed_file_extension, preprocess, getModel, upload_image_to_gcs, file_too_large
+from PIL import Image
 import numpy as np
 import uuid
 import os
 
 bp = Blueprint('facialrecognition', __name__)
+
+@bp.route('/', defaults={'path': ''})
+@bp.route('/<path:path>')
+def handle_unmatched(path):
+    return jsonify({"Message":"Hello world! This is SerabutInn Facial Recognition ML API."})
 
 @bp.route("/upload-verification-images", methods=['POST'])
 def upload():
@@ -25,29 +31,35 @@ def upload():
             }
             return jsonify(response), 400
 
-        images = request.files.getlist('images[]')
+        verification_images = request.files.getlist('images[]')
         customer_id = request.form.get('customer_id')
 
-        uploaded_images = []
-
-        for image in images:
-            if image and allowed_file(image.filename) and not file_too_large(image):
+        for image in verification_images:
+            if image and allowed_file_extension(image.filename) and not file_too_large(image):
                 try:
                     unique_id = uuid.uuid4().hex
                     filename = image.filename
-                    image_name = unique_id + "-" + filename
-                    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], image_name)
-                    image.save(file_path)
+                    image_name = customer_id + "-" + unique_id + "-" + filename
 
-                    preprocessed_img = preprocess(file_path)
-                    os.remove(file_path)
+                    # file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], image_name)
+                    # image.save(file_path)
 
-                    preprocessed_img.save(file_path)
+                    image.save(image_name)
 
-                    upload_image_to_gcs(current_app.config['VERIFICATION_IMG_BUCKET'], file_path, customer_id)
-                    uploaded_images.append(filename)
+                    image = Image.open(image_name)
+                    new_size = (105, 105)
+                    resized_image = image.resize(new_size)
 
-                    os.remove(file_path)
+                    resized_image.save(image_name)
+
+                    # preprocessed_img = preprocess(file_path)
+                    # os.remove(file_path)
+                    # preprocessed_img.save(file_path)
+
+                    upload_image_to_gcs(current_app.config['VERIFICATION_IMG_BUCKET'], image_name, customer_id)
+
+                    if os.path.exists(image_name):
+                        os.remove(image_name)
                 except Exception as e:
                     response = {
                         "status": 500,
@@ -55,13 +67,13 @@ def upload():
                         "error": True
                     }
                     return jsonify(response), 500
+                finally:
+                    if os.path.exists(image_name):
+                        os.remove(image_name)
 
         response = {
             "status": 201,
-            "message": "Uploaded verification images successfully successfully",
-            "data": {
-                "uploaded_images": uploaded_images,
-            },
+            "message": "Uploaded verification images successfully",
             "error": False,
         }
         return jsonify(response)
@@ -93,63 +105,92 @@ def predict():
             }
             return jsonify(response), 400
 
-        img = request.files['image']
+        input_image = request.files['image']
         customer_id = request.form.get('customer_id')
         
-        if file_too_large(img):
+        if file_too_large(input_image):
             response = {
                 "status": 400,
-                "message": "File too large.",
+                "message": "File too large. Max file size: 2MB.",
                 "error": True
             }
             return jsonify(response), 400
 
-        if not allowed_file(img):
+        if not allowed_file_extension(input_image):
             response = {
                 "status": 400,
-                "message": "Unsupported media type.",
+                "message": "Unsupported media type. Please upload jpg/jpeg image.",
                 "error": True
             }
             return jsonify(response), 400
 
-        if img.filename == '':
+        if input_image.filename == '':
             response = {
                 "status": 400,
-                "message": "No selected file",
+                "message": "No selected image.",
                 "error": True
             }
             return jsonify(response), 400
 
-        input_image_path = img.filename
+        input_image_path = input_image.filename
 
         try:
-            img.save(input_image_path)
+            input_image.save(input_image_path)
 
             detection_threshold = 0.6
             verification_threshold = 0.7
 
-            download_images_from_gcs_folder(current_app.config['VERIFICATION_IMG_BUCKET'], customer_id+"/")
+            # download_images_from_gcs_folder(current_app.config['VERIFICATION_IMG_BUCKET'], customer_id+"/")
 
             results = []
             
             model = getModel()
-            for image in os.listdir(current_app.config['UPLOAD_FOLDER']):
-                input_img = preprocess(input_image_path)
-                # validation_img = preprocess(os.path.join(current_app.config['UPLOAD_FOLDER'], image))
-                result = model.predict([np.expand_dims(input_img, axis=0), np.expand_dims(image, axis=0)])
+
+            credentials, project = load_credentials_from_file(Config.GOOGLE_APPLICATION_CREDENTIALS)
+
+            if credentials.expired:
+                credentials.refresh(Request())
+
+            client = storage.Client(credentials=credentials, project=project)
+            bucket = client.get_bucket(bucket_name)
+
+            verification_images = bucket.list_blobs(prefix=folder_name)
+
+            input_image_tensor = preprocess(input_image_path)
+            n_verification_images = 0
+            for verification_image in verification_images:
+                if verification_image.name.endswith('/'):
+                    continue
+                verification_image_path = os.path.basename(verification_image.name)
+                verification_image.download_to_filename(verification_image_path)
+
+                verification_image_tensor = preprocess(verification_image_path)
+
+                result = model.predict([np.expand_dims(input_image_tensor, axis=0), np.expand_dims(verification_image_tensor, axis=0)])
                 results.append(result)
 
+                if os.path.exists(verification_image_path):
+                    os.remove(verification_image_path)
+
+                n_verification_images += 1
+
+            # for image in os.listdir(current_app.config['UPLOAD_FOLDER']):
+            #     input_image_tensor = preprocess(input_image_path)
+            #     verification_image_tensor = preprocess(os.path.join(current_app.config['UPLOAD_FOLDER'], image))
+            #     result = model.predict([np.expand_dims(input_image_tensor, axis=0), np.expand_dims(image, axis=0)])
+            #     results.append(result)
+
             detection = np.sum(np.array(results) > detection_threshold)
-            verification = detection / len(os.listdir(current_app.config['UPLOAD_FOLDER']))
+            verification = detection / n_verification_images
             verified = verification > verification_threshold
             
-            files = os.listdir(current_app.config['UPLOAD_FOLDER'])
+            # files = os.listdir(current_app.config['UPLOAD_FOLDER'])
 
-            for file_name in files:
-                file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], file_name)
+            # for file_name in files:
+            #     file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], file_name)
 
-                if os.path.isfile(file_path):
-                    os.remove(file_path)
+            #     if os.path.isfile(file_path):
+            #         os.remove(file_path)
 
             response = {
                 "status": 200,
