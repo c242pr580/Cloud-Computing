@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, current_app
-from .module import allowed_file_extension, preprocess, getModel, upload_image_to_gcs, file_too_large
+from .module import allowed_file_extension, preprocess, getModel, upload_image_to_gcs, file_too_large, clear_gcs_folder
 from PIL import Image
 from google.cloud import storage
 from google.auth import load_credentials_from_file
@@ -36,6 +36,8 @@ def upload():
 
         verification_images = request.files.getlist('images[]')
         customer_id = request.form.get('customer_id')
+        
+        clear_gcs_folder(current_app.config['VERIFICATION_IMG_BUCKET'], customer_id)
 
         for image in verification_images:
             if image and allowed_file_extension(image.filename) and not file_too_large(image):
@@ -43,9 +45,6 @@ def upload():
                     unique_id = uuid.uuid4().hex
                     filename = image.filename
                     image_name = customer_id + "-" + unique_id + "-" + filename
-
-                    # file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], image_name)
-                    # image.save(file_path)
 
                     image.save(image_name)
 
@@ -55,15 +54,12 @@ def upload():
 
                     resized_image.save(image_name)
 
-                    # preprocessed_img = preprocess(file_path)
-                    # os.remove(file_path)
-                    # preprocessed_img.save(file_path)
-
                     upload_image_to_gcs(current_app.config['VERIFICATION_IMG_BUCKET'], image_name, customer_id)
 
                     if os.path.exists(image_name):
                         os.remove(image_name)
                 except Exception as e:
+                    clear_gcs_folder(current_app.config['VERIFICATION_IMG_BUCKET'], customer_id)
                     response = {
                         "status": 500,
                         "message": f"Failed to upload {filename}: {str(e)}",
@@ -76,7 +72,7 @@ def upload():
             else:
                 response = {
                     "status": 400,
-                    "message": "Upload file gagal",
+                    "message": f"Failed to upload {image.filename}. Please upload a jpg/jpeg image no bigger than 2MB",
                     "error": True
                 }
                 return jsonify(response), 400
@@ -150,8 +146,6 @@ def predict():
             detection_threshold = 0.6
             verification_threshold = 0.7
 
-            # download_images_from_gcs_folder(current_app.config['VERIFICATION_IMG_BUCKET'], customer_id+"/")
-
             results = []
             
             model = getModel()
@@ -184,23 +178,9 @@ def predict():
 
                 n_verification_images += 1
 
-            # for image in os.listdir(current_app.config['UPLOAD_FOLDER']):
-            #     input_image_tensor = preprocess(input_image_path)
-            #     verification_image_tensor = preprocess(os.path.join(current_app.config['UPLOAD_FOLDER'], image))
-            #     result = model.predict([np.expand_dims(input_image_tensor, axis=0), np.expand_dims(image, axis=0)])
-            #     results.append(result)
-
             detection = np.sum(np.array(results) > detection_threshold)
             verification = detection / n_verification_images
             verified = verification > verification_threshold
-            
-            # files = os.listdir(current_app.config['UPLOAD_FOLDER'])
-
-            # for file_name in files:
-            #     file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], file_name)
-
-            #     if os.path.isfile(file_path):
-            #         os.remove(file_path)
 
             response = {
                 "status": 200,
