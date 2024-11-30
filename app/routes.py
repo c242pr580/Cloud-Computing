@@ -1,6 +1,9 @@
 from flask import Blueprint, jsonify, request, current_app
 from .module import allowed_file_extension, preprocess, getModel, upload_image_to_gcs, file_too_large
 from PIL import Image
+from google.cloud import storage
+from google.auth import load_credentials_from_file
+from google.auth.transport.requests import Request
 import numpy as np
 import uuid
 import os
@@ -23,7 +26,7 @@ def upload():
             }
             return jsonify(response), 400
 
-        if 'customer_id' not in request.files:
+        if 'customer_id' not in request.form:
             response = {
                 "status": 400,
                 "message": "No customer_id provided",
@@ -70,6 +73,13 @@ def upload():
                 finally:
                     if os.path.exists(image_name):
                         os.remove(image_name)
+            else:
+                response = {
+                    "status": 400,
+                    "message": "Upload file gagal",
+                    "error": True
+                }
+                return jsonify(response), 400
 
         response = {
             "status": 201,
@@ -97,7 +107,7 @@ def predict():
             }
             return jsonify(response), 400
         
-        if 'customer_id' not in request.files:
+        if 'customer_id' not in request.form:
             response = {
                 "status": 400,
                 "message": "No customer_id provided",
@@ -116,7 +126,7 @@ def predict():
             }
             return jsonify(response), 400
 
-        if not allowed_file_extension(input_image):
+        if not allowed_file_extension(input_image.filename):
             response = {
                 "status": 400,
                 "message": "Unsupported media type. Please upload jpg/jpeg image.",
@@ -146,15 +156,15 @@ def predict():
             
             model = getModel()
 
-            credentials, project = load_credentials_from_file(Config.GOOGLE_APPLICATION_CREDENTIALS)
+            credentials, project = load_credentials_from_file(current_app.config['GOOGLE_APPLICATION_CREDENTIALS'])
 
             if credentials.expired:
                 credentials.refresh(Request())
 
             client = storage.Client(credentials=credentials, project=project)
-            bucket = client.get_bucket(bucket_name)
+            bucket = client.get_bucket(current_app.config['VERIFICATION_IMG_BUCKET'])
 
-            verification_images = bucket.list_blobs(prefix=folder_name)
+            verification_images = bucket.list_blobs(prefix=f"{customer_id}/")
 
             input_image_tensor = preprocess(input_image_path)
             n_verification_images = 0
