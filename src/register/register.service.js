@@ -21,11 +21,12 @@ const registerUser = async (userData) => {
  
     const id = `user-${crypto.randomUUID()}`;
     const normalizedEmail = email.toLowerCase();
+    const normalizedUsername = username.toLowerCase();
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = {
         user_id: id,
-        username,
+        username: normalizedUsername,
         email: normalizedEmail,
         password: hashedPassword,
         location,
