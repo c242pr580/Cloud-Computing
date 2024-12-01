@@ -1,4 +1,5 @@
 const Boom = require('@hapi/boom');
+const usersModule = require('../user/user.module');
 const jobsService = require('../jobs/jobs.service');
 const mitrasService = require('../mitra/mitras.service');
 const customersModule = require('../customer/customers.module');
@@ -88,6 +89,9 @@ const createJobHandler = async (request, h) => {
 
         const { customer_id } = customer;
 
+        const user = await usersModule.findUserById(userId);
+        const { phone } = user;
+
         let publicUrl = null;
         if (request.payload.image) {
             const file = request.payload.image;
@@ -118,6 +122,7 @@ const createJobHandler = async (request, h) => {
             ...request.payload,
             image: publicUrl,
             customer_id,
+            phone
         });
 
         const result = utils.removeNullProperties(newJob);
@@ -775,7 +780,7 @@ const addRatingHandler = async (request, h) => {
             }).code(boomError.output.statusCode);
         }
 
-        const updatedJob = await jobsService.addRatingToJob(job_id, rating);
+        // const updatedJob = await jobsService.addRatingToJob(job_id, rating);
 
         if (job.mitra_id) {
             await mitrasService.updateMitraRating(job.mitra_id);

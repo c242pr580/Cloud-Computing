@@ -6,7 +6,8 @@ const { JWT_SECRET, JWT_EXPIRES_IN } = process.env;
 
 const loginUser = async ({ email, password }) => {
    
-    const user = await loginModule.findUserByEmail(email);
+    const normalizedEmail = email.toLowerCase();
+    const user = await loginModule.findUserByEmail(normalizedEmail);
     if (!user) {
         throw new Error('User not found, Please check your email or sign up.');
     }

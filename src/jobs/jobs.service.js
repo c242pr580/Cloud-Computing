@@ -3,7 +3,7 @@ const jobsModule = require('../jobs/jobs.module');
 const { getCurrentTime } = require('../utils/time');
 
 const addJobById = async (jobData) => {
-    const { title, deadline, location, cost, description, image, customer_id } = jobData;
+    const { title, deadline, location, cost, description, image, customer_id, phone } = jobData;
     const job_id = `job-${crypto.randomUUID()}`;
 
     const newJob = {
@@ -15,6 +15,7 @@ const addJobById = async (jobData) => {
         description,
         image: image || null,
         customer_id,
+        phone,
         status: 'Pending', 
         createdAt: getCurrentTime(),
     };
