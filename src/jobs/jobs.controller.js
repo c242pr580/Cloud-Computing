@@ -780,7 +780,7 @@ const addRatingHandler = async (request, h) => {
             }).code(boomError.output.statusCode);
         }
 
-        // const updatedJob = await jobsService.addRatingToJob(job_id, rating);
+        const updatedJob = await jobsService.addRatingToJob(job_id, rating);
 
         if (job.mitra_id) {
             await mitrasService.updateMitraRating(job.mitra_id);
