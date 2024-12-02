@@ -382,6 +382,27 @@
     "error": false
 }
 ```
+### Get Detail Mitra By MitraId
+
+- **URL**: `/mitra/detail/{mitra_id}`
+- **Method**: `GET`
+- **Auth required**: `YES`
+- **Response**:
+
+```json
+{
+    "status": 200,
+    "message": "Mitra details retrieved successfully",
+    "data": {
+        "mitra_id": "mitra-b3336c46-6eb4-4f22-a7d1-b3491c9d50e6",
+        "business_name": "Louis Printing",
+        "business_address": "Bangka Belitung",
+        "transaction_done": "2",
+        "rating": "3.5"
+    },
+    "error": false
+}
+```
 ### Update A Data Mitra
 
 - **URL**: `/mitra/biodata/update`

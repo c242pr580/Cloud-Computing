@@ -1,6 +1,6 @@
 const { verifyMitra } = require('../middleware/mitra.middleware');
 const { assignJobHandler, getJobsByMitraHandler, getAllJobsHandler, getPendingJobsHandler } = require('../jobs/jobs.controller');
-const { updateMitraDataHandler } = require('../mitra/mitras.controller');
+const { updateMitraDataHandler, getMitraDetailByIdHandler } = require('../mitra/mitras.controller');
 
 module.exports = [
     {
@@ -12,6 +12,14 @@ module.exports = [
         },
         handler: (request, h) => {
             return { message: 'Welcome to the mitra dashboard!' };
+        },
+    },
+    {
+        method: 'GET',
+        path: '/mitra/detail/{mitraId}',
+        handler: getMitraDetailByIdHandler,
+        options: {
+            auth: 'jwt',
         },
     },
     {

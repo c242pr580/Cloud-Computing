@@ -8,7 +8,7 @@ const getMitraByUserId = async (user_id) => {
 const updateMitraData = async (mitra_id, updatedData) => {
     const mitra = await mitrasModule.findMitraById(mitra_id);
     if (!mitra) {
-        throw new Error('Mitra not found, Please try again.');
+        throw new Error('Mitra profile not found, Please try again.');
     }
 
     const updatedMitra = {
@@ -26,7 +26,7 @@ const updateTransactionDone = async (mitra_id) => {
 
     const mitra = await mitrasModule.findMitraById(mitra_id);
     if (!mitra) {
-        throw new Error('Mitra not found, Please try again.');
+        throw new Error('Mitra profile not found, Please try again.');
     }
 
     await mitrasModule.updateMitra(mitra_id, {
@@ -47,7 +47,7 @@ const updateMitraRating = async (mitra_id) => {
 
     const mitra = await mitrasModule.findMitraById(mitra_id);
     if (!mitra) {
-        throw new Error('Mitra not found, Please try again.');
+        throw new Error('Mitra profile not found, Please try again.');
     }
 
     const updatedMitra = {
@@ -60,11 +60,19 @@ const updateMitraRating = async (mitra_id) => {
     return updatedMitra;
 };
 
-
+const getMitraById = async (mitra_id) => {
+    try {
+        const mitra = await mitrasModule.findMitraById(mitra_id);
+        return mitra;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+};
 
 module.exports = {
     getMitraByUserId,
     updateMitraData,
     updateTransactionDone,
-    updateMitraRating
+    updateMitraRating,
+    getMitraById
 };

@@ -61,6 +61,46 @@ const updateMitraDataHandler = async (request, h) => {
     }
 };
 
+const getMitraDetailByIdHandler = async (request, h) => {
+    try {
+        const { mitraId } = request.params;
+        const mitra = await mitrasService.getMitraById(mitraId);
+
+        if (!mitra) {
+            const boomError = Boom.notFound('Mitra profile not found, Please try again.');
+            return h.response({
+                status: boomError.output.statusCode,
+                message: boomError.message,
+                error: true,
+            }).code(boomError.output.statusCode);
+        }
+
+        const mitraDetail = {
+            mitra_id: mitra.mitra_id,
+            business_name: mitra.business_name,
+            business_address: mitra.business_address,
+            transaction_done: mitra.transaction_done,
+            rating: mitra.rating
+        };
+
+        return h.response({
+            status: 200,
+            message: 'Mitra details retrieved successfully',
+            data: mitraDetail,
+            error: false,
+        }).code(200);
+
+    } catch (error) {
+        const boomError = Boom.badRequest(error.message);
+        return h.response({
+            status: boomError.output.statusCode,
+            message: boomError.message,
+            error: true,
+        }).code(boomError.output.statusCode);
+    }
+};
+
 module.exports = {
-    updateMitraDataHandler
+    updateMitraDataHandler,
+    getMitraDetailByIdHandler
 };
