@@ -1,12 +1,14 @@
 from config import Config
-from tensorflow.keras.layers import Layer
 from pathlib import Path
-import tensorflow as tf
-import requests
 from google.cloud import storage
 from google.auth import load_credentials_from_file
 from google.auth.transport.requests import Request
+import tensorflow as tf
+import requests
 import os
+import cv2
+import numpy as np
+import pickle
 
 def allowed_file_extension(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
@@ -16,14 +18,7 @@ def file_too_large(file):
     file_length = file.tell()
     file.seek(0)
 
-    return file_length > 2 * 1024 * 1024
-
-def preprocess(file_path):
-    byte_img = tf.io.read_file(file_path)
-    img = tf.io.decode_jpeg(byte_img)
-    img = tf.image.resize(img, (105, 105))
-    img = img / 255.0
-    return img
+    return file_length > 1 * 1024 * 1024
 
 def getModel():
     if not Path(Config.LOCAL_MODEL_PATH).is_file():
@@ -35,43 +30,99 @@ def getModel():
         else:
             raise Exception(f"Failed to download model: {response.status_code}")
         
-    model = tf.keras.models.load_model(Config.LOCAL_MODEL_PATH, custom_objects={'L1Dist': L1Dist})
+    model = tf.keras.models.load_model(Config.LOCAL_MODEL_PATH)
     return model
 
-def upload_image_to_gcs(bucket_name, image_path, folder_name):
+def upload_to_gcs(file_path):
     credentials, project = load_credentials_from_file(Config.GOOGLE_APPLICATION_CREDENTIALS)
+    bucket_name = Config.VERIFICATION_IMG_BUCKET
 
     if credentials.expired:
         credentials.refresh(Request())
 
     client = storage.Client(credentials=credentials, project=project)
     bucket = client.get_bucket(bucket_name)
-    folder_path = f"{folder_name}/"
 
-    image_filename = os.path.basename(image_path)
-
-    destination_blob_name = folder_path + image_filename
+    destination_blob_name = os.path.basename(file_path)
 
     blob = bucket.blob(destination_blob_name)
-    blob.upload_from_filename(image_path)
+    blob.upload_from_filename(file_path)
 
-def clear_gcs_folder(bucket_name, folder_name):
-    credentials, project = load_credentials_from_file(Config.GOOGLE_APPLICATION_CREDENTIALS)
+def preprocess_face(face):
+    face_gray = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
+    face_resized = cv2.resize(face_gray, (96, 96))
+    face_normalized = face_resized / 255.0
+    face_input = np.expand_dims(face_normalized, axis=-1)
+    face_input = np.expand_dims(face_input, axis=0)
+    return face_input
 
-    if credentials.expired:
-        credentials.refresh(Request())
+def get_keypoints(image_name):
+    image = cv2.imread(image_name)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    client = storage.Client(credentials=credentials, project=project)
-    bucket = client.get_bucket(bucket_name)
-    target_folder = bucket.list_blobs(prefix=f"{folder_name}/")
-    for file in target_folder:
-        file.delete()
+    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + '/haarcascade_frontalface_default.xml')
 
-class L1Dist(Layer):
-    def __init__(self, **kwargs):
-        super(L1Dist, self).__init__(**kwargs)
+    if face_cascade.empty():
+        raise IOError('Haar Cascade classifier file not found!')
 
-    def call(self, input_embedding, validation_embedding):
-        input_embedding = input_embedding[0] if isinstance(input_embedding, list) else input_embedding
-        validation_embedding = validation_embedding[0] if isinstance(validation_embedding, list) else validation_embedding
-        return tf.math.abs(input_embedding - validation_embedding)
+    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+    
+    cropped_faces = []
+    for (x, y, w, h) in faces:
+        face = image[y:y+h, x:x+w]
+
+        resized_face = cv2.resize(face, (96, 96))
+        cropped_faces.append(resized_face)
+
+        cv2.rectangle(image, (x, y), (x+w, y+h), (255, 0, 0), 2)
+        
+    model = getModel()
+    
+    for idx, cropped_face in enumerate(cropped_faces):
+        face_input = preprocess_face(cropped_face)
+
+        keypoints = model.predict(face_input)
+        keypoints = keypoints.reshape(-1, 2)
+            
+    return keypoints
+
+def get_verification_keypoints(customer_id):
+    keypoints_url = f"https://storage.googleapis.com/{Config.VERIFICATION_IMG_BUCKET}/keypoints_face_{customer_id}.pkl"
+    response = requests.get(keypoints_url, stream=True)
+    if response.status_code == 200:
+        with open(f"keypoints_face_{customer_id}.pkl", 'wb') as f:
+            for chunk in response.iter_content(chunk_size=128):
+                f.write(chunk)
+    else:
+        raise Exception(f"Failed to download keypoints: {response.status_code}")
+    
+    with open(f"keypoints_face_{customer_id}.pkl", 'rb') as f:
+        keypoints = pickle.load(f)
+    return keypoints
+
+def normalize_landmarks(keypoints, img_width, img_height):
+    normalized = keypoints / [img_width, img_height]
+    
+    return normalized
+
+def calculate_distances(landmarks):
+    num_points = len(landmarks)
+    distances = []
+    for i in range(num_points):
+        for j in range(i + 1, num_points):
+            dist = np.linalg.norm(landmarks[i] - landmarks[j])
+            distances.append(dist)
+    
+    return np.array(distances)
+
+def face_similarity(input_keypoints, verification_keypoints):
+    img_width, img_height = 96, 96
+    landmarks1_normalized = normalize_landmarks(input_keypoints, img_width, img_height)
+    landmarks2_normalized = normalize_landmarks(verification_keypoints, img_width, img_height)
+
+    features1 = calculate_distances(landmarks1_normalized)
+    features2 = calculate_distances(landmarks2_normalized)
+
+    distance = np.linalg.norm(features1 - features2)
+    
+    return distance
