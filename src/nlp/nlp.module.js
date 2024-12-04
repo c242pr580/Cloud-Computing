@@ -5,7 +5,7 @@ const fetch = require('node-fetch');
 const loadVocabulary = async () => {
     let vocabulary = [];
     try {
-        const response = await fetch("https://storage.googleapis.com/serabutiin-model-in-prod/nlp/vocab.txt");
+        const response = await fetch(process.env.VOCAB);
         if (!response.ok) {
             throw new Error(`Failed to download vocabulary: ${response.status}`);
         }
