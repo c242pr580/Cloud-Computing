@@ -126,6 +126,8 @@
 
 - **URL**: `/customer/validate/jobs`
 - **Method**: `POST`
+- **Auth required**: `YES`
+- **Role required**: `Customer`
 - **Request Body**:
   - `title` as `string` - `Title A Jobs`
 - **Response**:
