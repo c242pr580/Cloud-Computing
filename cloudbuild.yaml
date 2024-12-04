@@ -22,7 +22,7 @@ steps:
       - '--set-env-vars'
       - 'PROJECT_ID=${PROJECT_ID}'
       - '--set-secrets'
-      - 'NLP_MODEL=NLP_MODEL:latest'
+      - 'NLP_MODEL=NLP_MODEL:latest,VOCAB=VOCAB:latest'
 
 options:
   logging: CLOUD_LOGGING_ONLY
