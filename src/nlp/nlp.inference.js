@@ -4,7 +4,7 @@ const { loadVocabulary, vectorizeText } = require('./nlp.module');
 async function predict(model, title) {
     try {
         const vocabulary = await loadVocabulary();
-        const maxLength = 20;
+        const maxLength = 50;
         const inputArray = vectorizeText(title, vocabulary, maxLength);
         const tensorInput = tfjs.tensor2d([inputArray], [1, maxLength]);
         const prediction = model.predict(tensorInput);

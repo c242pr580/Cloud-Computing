@@ -1,11 +1,15 @@
-const { vocab } = require('./vocab');
 require('dotenv').config();
 const tfjs = require('@tensorflow/tfjs-node');
+const fetch = require('node-fetch');
 
 const loadVocabulary = async () => {
     let vocabulary = [];
     try {
-        const stringVocab = vocab;
+        const response = await fetch("https://storage.googleapis.com/serabutiin-model-in-prod/nlp/vocab.txt");
+        if (!response.ok) {
+            throw new Error(`Failed to download vocabulary: ${response.status}`);
+        }
+        const stringVocab = await response.text();
         vocabulary = stringVocab.split('\n').map(word => word.trim());
 
         if (vocabulary[0] !== '') {
