@@ -16,7 +16,7 @@ def file_too_large(file):
     file_length = file.tell()
     file.seek(0)
 
-    return file_length > 2 * 1024 * 1024
+    return file_length > 1 * 1024 * 1024
 
 def preprocess(file_path):
     byte_img = tf.io.read_file(file_path)
