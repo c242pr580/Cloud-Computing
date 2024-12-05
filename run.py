@@ -7,5 +7,9 @@ sys.stdout.reconfigure(encoding='utf-8')
 app = create_app()
 
 if __name__ == '__main__':
-    print('Running on http://'+app.config['HOST']+':'+app.config['PORT'])
-    serve(app, host=app.config['HOST'], port=app.config['PORT'])
+    port = app.config.get('PORT_FACE', 3000)
+    host = '0.0.0.0'
+    
+    print(f'Running on http://{host}:{port}')
+    
+    serve(app, host=host, port=port)

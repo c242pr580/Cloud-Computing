@@ -1,0 +1,34 @@
+steps:
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/serabutinn-model-face/serabutinn-model-face', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/serabutinn-model-face/serabutinn-model-face']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'serabutinn-model-face'
+      - '--image'
+      - 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/serabutinn-model-face/serabutinn-model-face'
+      - '--region'
+      - '${_REGION}'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'PROJECT_ID=${PROJECT_ID}'
+      - '--set-secrets'
+      - 'PORT_FACE=PORT_FACE:latest,UPLOAD_FOLDER=UPLOAD_FOLDER:latest,MODEL_URL=MODEL_URL:latest,LOCAL_MODEL_PATH=LOCAL_MODEL_PATH:latest,GOOGLE_APPLICATION_CREDENTIALS=GOOGLE_APPLICATION_CREDENTIALS:latest,VERIFICATION_IMG_BUCKET=VERIFICATION_IMG_BUCKET:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _REGION: asia-southeast2
+
+images:
+  - 'asia-southeast2-docker.pkg.dev/$PROJECT_ID/serabutinn-model-face/serabutinn-model-face'
