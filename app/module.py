@@ -94,7 +94,7 @@ def get_verification_keypoints(customer_id):
             for chunk in response.iter_content(chunk_size=128):
                 f.write(chunk)
     else:
-        raise Exception(f"Failed to download keypoints: {response.status_code}")
+        raise Exception("Failed to download keypoints. Make sure customer_id is valid and try again.")
     
     with open(f"keypoints_face_{customer_id}.pkl", 'rb') as f:
         keypoints = pickle.load(f)

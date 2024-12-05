@@ -32,6 +32,22 @@ def upload():
         verification_image = request.files['verification_image']
         customer_id = request.form.get('customer_id')
         
+        if input_image.filename == '':
+            response = {
+                "status": 400,
+                "message": "No selected image.",
+                "error": True
+            }
+            return jsonify(response), 400
+        
+        if customer_id == '':
+            response = {
+                "status": 400,
+                "message": "No customer_id provided.",
+                "error": True
+            }
+            return jsonify(response), 400
+        
         if verification_image and allowed_file_extension(verification_image.filename) and not file_too_large(verification_image):
             try:
                 verification_image_name = customer_id
@@ -107,6 +123,22 @@ def predict():
         input_image = request.files['input_image']
         customer_id = request.form.get('customer_id')
         
+        if input_image.filename == '':
+            response = {
+                "status": 400,
+                "message": "No selected image.",
+                "error": True
+            }
+            return jsonify(response), 400
+        
+        if customer_id == '':
+            response = {
+                "status": 400,
+                "message": "No customer_id provided.",
+                "error": True
+            }
+            return jsonify(response), 400
+        
         if file_too_large(input_image):
             response = {
                 "status": 400,
@@ -123,20 +155,15 @@ def predict():
             }
             return jsonify(response), 400
 
-        if input_image.filename == '':
-            response = {
-                "status": 400,
-                "message": "No selected image.",
-                "error": True
-            }
-            return jsonify(response), 400
-
         input_image_path = customer_id
 
         try:
             input_image.save(input_image_path)
             input_keypoints = get_keypoints(input_image_path)
             verification_keypoints = get_verification_keypoints(customer_id)
+            
+            print(input_keypoints)
+            print(verification_keypoints)
 
             verification_score = face_similarity(input_keypoints, verification_keypoints)
             
@@ -147,9 +174,9 @@ def predict():
                 "status": 200,
                 "message": "Model predicted successfully",
                 "data": {
-                    "verified": verified,
-                    "verification_score": verification_score,
-                    "threshold": threshold
+                    "verified": bool(verified),
+                    "verification_score": float(verification_score),
+                    "threshold": float(threshold)
                 },
                 "error": False
             }
