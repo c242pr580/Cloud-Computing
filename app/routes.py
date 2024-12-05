@@ -32,7 +32,7 @@ def upload():
         verification_image = request.files['verification_image']
         customer_id = request.form.get('customer_id')
         
-        if input_image.filename == '':
+        if verification_image.filename == '':
             response = {
                 "status": 400,
                 "message": "No selected image.",
