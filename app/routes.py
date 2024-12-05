@@ -1,12 +1,7 @@
-from flask import Blueprint, jsonify, request, current_app
-from .module import allowed_file_extension, preprocess, getModel, upload_image_to_gcs, file_too_large, clear_gcs_folder
-from PIL import Image
-from google.cloud import storage
-from google.auth import load_credentials_from_file
-from google.auth.transport.requests import Request
-import numpy as np
-import uuid
+from flask import Blueprint, jsonify, request
+from .module import *
 import os
+import pickle
 
 bp = Blueprint('facialrecognition', __name__)
 
@@ -15,90 +10,13 @@ bp = Blueprint('facialrecognition', __name__)
 def handle_unmatched(path):
     return jsonify({"Message":"Hello world! This is Backend Model Facial Recognition API SerabutInn."})
 
-# @bp.route("/upload-verification-images", methods=['POST'])
-# def upload():
-#     try:
-#         if 'images[]' not in request.files:
-#             response = {
-#                 "status": 400,
-#                 "message": "No images provided",
-#                 "error": True
-#             }
-#             return jsonify(response), 400
-
-#         if 'customer_id' not in request.form:
-#             response = {
-#                 "status": 400,
-#                 "message": "No customer_id provided",
-#                 "error": True
-#             }
-#             return jsonify(response), 400
-
-#         verification_images = request.files.getlist('images[]')
-#         customer_id = request.form.get('customer_id')
-        
-#         clear_gcs_folder(current_app.config['VERIFICATION_IMG_BUCKET'], customer_id)
-
-#         for image in verification_images:
-#             if image and allowed_file_extension(image.filename) and not file_too_large(image):
-#                 try:
-#                     unique_id = uuid.uuid4().hex
-#                     filename = image.filename
-#                     image_name = customer_id + "-" + unique_id + "-" + filename
-
-#                     image.save(image_name)
-
-#                     image = Image.open(image_name)
-#                     new_size = (105, 105)
-#                     resized_image = image.resize(new_size)
-
-#                     resized_image.save(image_name)
-
-#                     upload_image_to_gcs(current_app.config['VERIFICATION_IMG_BUCKET'], image_name, customer_id)
-
-#                     if os.path.exists(image_name):
-#                         os.remove(image_name)
-#                 except Exception as e:
-#                     clear_gcs_folder(current_app.config['VERIFICATION_IMG_BUCKET'], customer_id)
-#                     response = {
-#                         "status": 500,
-#                         "message": f"Failed to upload {filename}: {str(e)}",
-#                         "error": True
-#                     }
-#                     return jsonify(response), 500
-#                 finally:
-#                     if os.path.exists(image_name):
-#                         os.remove(image_name)
-#             else:
-#                 response = {
-#                     "status": 400,
-#                     "message": f"Failed to upload {image.filename}. Please upload a jpg/jpeg image no bigger than 2MB",
-#                     "error": True
-#                 }
-#                 return jsonify(response), 400
-
-#         response = {
-#             "status": 201,
-#             "message": "Uploaded verification images successfully",
-#             "error": False,
-#         }
-#         return jsonify(response)
-#     except Exception as e:
-#         error_message = str(e).encode('utf-8', 'ignore').decode('utf-8')
-#         response = {
-#             "status": 500,
-#             "message": error_message,
-#             "error": True
-#         }
-#         return jsonify(response), 500
-
-@bp.route("/upload-verification-images", methods=['POST'])
+@bp.route("/upload-verification-image", methods=['POST'])
 def upload():
     try:
-        if 'images[]' not in request.files:
+        if 'verification_image' not in request.files:
             response = {
                 "status": 400,
-                "message": "No images provided",
+                "message": "No image provided",
                 "error": True
             }
             return jsonify(response), 400
@@ -111,68 +29,69 @@ def upload():
             }
             return jsonify(response), 400
 
-        verification_images = request.files.getlist('images[]')
+        verification_image = request.files['verification_image']
         customer_id = request.form.get('customer_id')
         
-        # Clear previous verification images in GCS folder
-        clear_gcs_folder(current_app.config['VERIFICATION_IMG_BUCKET'], customer_id)
+        if verification_image.filename == '':
+            response = {
+                "status": 400,
+                "message": "No selected image.",
+                "error": True
+            }
+            return jsonify(response), 400
+        
+        if customer_id == '':
+            response = {
+                "status": 400,
+                "message": "No customer_id provided.",
+                "error": True
+            }
+            return jsonify(response), 400
+        
+        if verification_image and allowed_file_extension(verification_image.filename) and not file_too_large(verification_image):
+            try:
+                verification_image_name = customer_id
 
-        for image in verification_images:
-            if image and allowed_file_extension(image.filename) and not file_too_large(image):
-                try:
-                    unique_id = uuid.uuid4().hex
-                    filename = image.filename
-                    image_name = filename
+                verification_image.save(verification_image_name)
 
-                    image.save(image_name)
+                keypoints = get_keypoints(verification_image_name)
+                
+                keypoints_path = f"keypoints_face_{verification_image_name}.pkl"
+                with open(keypoints_path, 'wb') as file:
+                    pickle.dump(keypoints, file)
 
-                    # Open the image using PIL
-                    image = Image.open(image_name)
-                    
-                    # Resize image or create 300 variations (You can add other image processing logic here)
-                    new_size = (105, 105)  # Example resize
-                    for i in range(100):  # Duplicate image 300 times
-                        resized_image = image.resize(new_size)
+                upload_to_gcs(keypoints_path)
 
-                        # Create a unique name for each duplicated image
-                        resized_image_name = f"{customer_id}-{unique_id}-{i}-{filename}"
-                        resized_image.save(resized_image_name)
-
-                        # Upload the resized image to GCS
-                        upload_image_to_gcs(current_app.config['VERIFICATION_IMG_BUCKET'], resized_image_name, customer_id)
-
-                        # Clean up the local resized image
-                        if os.path.exists(resized_image_name):
-                            os.remove(resized_image_name)
-
-                    # Clean up the original image after processing
-                    if os.path.exists(image_name):
-                        os.remove(image_name)
-
-                except Exception as e:
-                    # If any error occurs, clear the GCS folder and return error
-                    clear_gcs_folder(current_app.config['VERIFICATION_IMG_BUCKET'], customer_id)
-                    response = {
-                        "status": 500,
-                        "message": f"Failed to upload {filename}: {str(e)}",
-                        "error": True
-                    }
-                    return jsonify(response), 500
-            else:
+                if os.path.exists(verification_image_name):
+                    os.remove(verification_image_name)
+                if os.path.exists(keypoints_path):
+                    os.remove(keypoints_path)
+            except Exception as e:
                 response = {
-                    "status": 400,
-                    "message": f"Failed to upload {image.filename}. Please upload a jpg/jpeg image no bigger than 2MB",
+                    "status": 500,
+                    "message": f"Failed to upload {verification_image.filename}: {str(e)}",
                     "error": True
                 }
-                return jsonify(response), 400
+                return jsonify(response), 500
+            finally:
+                if os.path.exists(verification_image_name):
+                    os.remove(verification_image_name)
+                if os.path.exists(keypoints_path):
+                    os.remove(keypoints_path)
+        else:
+            response = {
+                "status": 400,
+                "message": f"Failed to upload {verification_image.filename}. Please upload a jpg/jpeg image no bigger than 1MB",
+                "error": True
+            }
+            return jsonify(response), 400
 
         response = {
             "status": 201,
-            "message": "Uploaded 300 verification images successfully",
+            "message": "Uploaded verification image successfully",
             "error": False,
         }
         return jsonify(response)
-
     except Exception as e:
         error_message = str(e).encode('utf-8', 'ignore').decode('utf-8')
         response = {
@@ -185,7 +104,7 @@ def upload():
 @bp.route("/predict", methods=["POST"])
 def predict():
     try:
-        if 'image' not in request.files:
+        if 'input_image' not in request.files:
             response = {
                 "status": 400,
                 "message": "No image provided",
@@ -201,8 +120,24 @@ def predict():
             }
             return jsonify(response), 400
 
-        input_image = request.files['image']
+        input_image = request.files['input_image']
         customer_id = request.form.get('customer_id')
+        
+        if input_image.filename == '':
+            response = {
+                "status": 400,
+                "message": "No selected image.",
+                "error": True
+            }
+            return jsonify(response), 400
+        
+        if customer_id == '':
+            response = {
+                "status": 400,
+                "message": "No customer_id provided.",
+                "error": True
+            }
+            return jsonify(response), 400
         
         if file_too_large(input_image):
             response = {
@@ -220,68 +155,28 @@ def predict():
             }
             return jsonify(response), 400
 
-        if input_image.filename == '':
-            response = {
-                "status": 400,
-                "message": "No selected image.",
-                "error": True
-            }
-            return jsonify(response), 400
-
-        input_image_path = input_image.filename
+        input_image_path = customer_id
 
         try:
             input_image.save(input_image_path)
-
-            detection_threshold = 0.4
-            verification_threshold = 0.5
-
-            results = []
+            input_keypoints = get_keypoints(input_image_path)
+            verification_keypoints = get_verification_keypoints(customer_id)
             
-            model = getModel()
+            print(input_keypoints)
+            print(verification_keypoints)
 
-            credentials, project = load_credentials_from_file(current_app.config['GOOGLE_APPLICATION_CREDENTIALS'])
-
-            if credentials.expired:
-                credentials.refresh(Request())
-
-            client = storage.Client(credentials=credentials, project=project)
-            bucket = client.get_bucket(current_app.config['VERIFICATION_IMG_BUCKET'])
-
-            verification_images = bucket.list_blobs(prefix=f"{customer_id}/")
-
-            input_image_tensor = preprocess(input_image_path)
-            n_verification_images = 0
-            for verification_image in verification_images:
-                if verification_image.name.endswith('/'):
-                    continue
-                verification_image_path = os.path.basename(verification_image.name)
-                verification_image.download_to_filename(verification_image_path)
-
-                verification_image_tensor = preprocess(verification_image_path)
-
-                result = model.predict([np.expand_dims(input_image_tensor, axis=0), np.expand_dims(verification_image_tensor, axis=0)])
-                print(f"Prediction result: {result}")
-                results.append(result)
-
-                if os.path.exists(verification_image_path):
-                    os.remove(verification_image_path)
-
-                n_verification_images += 1
-
-            detection = np.sum(np.array(results) > detection_threshold)
-            verification = detection / n_verification_images
-            verified = verification > verification_threshold
-            print(f"Results: {results}")
-            print(f"Detection sum: {detection}")
-            print(f"Verification score: {verification}")
+            verification_score = face_similarity(input_keypoints, verification_keypoints)
+            
+            threshold=0.1981
+            verified = verification_score < threshold
 
             response = {
                 "status": 200,
                 "message": "Model predicted successfully",
                 "data": {
                     "verified": bool(verified),
-                    "verification_score": float(verification)
+                    "verification_score": float(verification_score),
+                    "threshold": float(threshold)
                 },
                 "error": False
             }
@@ -299,6 +194,8 @@ def predict():
         finally:
             if os.path.exists(input_image_path):
                 os.remove(input_image_path)
+            if os.path.exists(f"keypoints_face_{customer_id}.pkl"):
+                os.remove(f"keypoints_face_{customer_id}.pkl")
 
     except Exception as e:
         error_message = str(e).encode('utf-8', 'ignore').decode('utf-8')
