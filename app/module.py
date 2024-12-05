@@ -78,11 +78,16 @@ def get_keypoints(image_name):
         
     model = getModel()
     
+    keypoints = None
+    
     for idx, cropped_face in enumerate(cropped_faces):
         face_input = preprocess_face(cropped_face)
 
         keypoints = model.predict(face_input)
         keypoints = keypoints.reshape(-1, 2)
+        
+    if keypoints is None:
+        raise ValueError("No keypoints detected. Ensure that the input image contains valid faces.")
             
     return keypoints
 
