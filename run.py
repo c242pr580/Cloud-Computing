@@ -12,4 +12,5 @@ if __name__ == '__main__':
     
     print(f'Running on http://{host}:{port}')
     
-    serve(app, host=host, port=port)  
+    serve(app, host=host, port=port)
+    
