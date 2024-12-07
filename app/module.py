@@ -3,6 +3,7 @@ from pathlib import Path
 from google.cloud import storage
 from google.auth import load_credentials_from_file
 from google.auth.transport.requests import Request
+from google.oauth2.service_account import Credentials
 import tensorflow as tf
 import requests
 import os
