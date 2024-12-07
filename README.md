@@ -19,7 +19,7 @@
 - **Request Header**:
   - `Content-Type` : `multipart/form-data`
 - **Request Body**:
-  - `verification_image` as `file` - `File Photo Customer`
+  - `verification_image` as `file` - `File Face Customer`
   - `customer_id` as `string` - `Customer Id`
 - **Response**:
 
@@ -37,7 +37,7 @@
 - **Request Header**:
   - `Content-Type` : `multipart/form-data`
 - **Request Body**:
-  - `input_image` as `file` - `File Photo Customer`
+  - `input_image` as `file` - `File Face Customer`
   - `customer_id` as `string` - `Customer Id`
 - **Response (Verified)**:
 
