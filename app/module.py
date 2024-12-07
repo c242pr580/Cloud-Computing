@@ -33,8 +33,21 @@ def getModel():
     model = tf.keras.models.load_model(Config.LOCAL_MODEL_PATH)
     return model
 
+def load_credentials_from_file_or_env():
+    credentials_json = None
+    if os.path.exists(Config.GOOGLE_APPLICATION_CREDENTIALS):
+        with open(Config.GOOGLE_APPLICATION_CREDENTIALS, 'r') as f:
+            credentials_json = f.read()
+    else:
+        credentials_json = Config.GOOGLE_APPLICATION_CREDENTIALS
+
+    credentials_dict = json.loads(credentials_json)
+    credentials = Credentials.from_service_account_info(credentials_dict)
+    project = credentials.project_id
+    return credentials, project
+
 def upload_to_gcs(file_path):
-    credentials, project = load_credentials_from_file(Config.GOOGLE_APPLICATION_CREDENTIALS)
+    credentials, project = load_credentials_from_file_or_env()
     bucket_name = Config.VERIFICATION_IMG_BUCKET
 
     if credentials.expired:
