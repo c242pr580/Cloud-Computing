@@ -1,7 +1,7 @@
 const { verifyCustomer } = require('../middleware/customer.middleware');
 const { createJobHandler, getJobsHandler, deleteJobHandler, updateJobHandler, completeJobHandler, addRatingHandler } = require('../jobs/jobs.controller');
 const { createPaymentHandler, handlePaymentNotification } = require('../transaction/transactions.controller');
-const { validateTitle } = require('../models/models.controller')
+const { validateTitle, verifyFaceHandler, uploadFaceHandler} = require('../models/models.controller')
 
 module.exports = [
     {
@@ -23,6 +23,36 @@ module.exports = [
             pre: [verifyCustomer],
         },
         handler: validateTitle,
+    },
+    {
+        method: 'POST',
+        path: '/customer/upload-face',
+        options: {
+            auth: 'jwt',
+            pre: [verifyCustomer],
+            payload: {
+                output: 'stream',
+                parse: true,
+                multipart: true,
+                maxBytes: 1 * 1024 * 1024,
+            },
+        },
+        handler: uploadFaceHandler,
+    },
+    {
+        method: 'POST',
+        path: '/customer/verify-face',
+        options: {
+            auth: 'jwt',
+            pre: [verifyCustomer],
+            payload: {
+                output: 'stream',
+                parse: true,
+                multipart: true,
+                maxBytes: 1 * 1024 * 1024,
+            },
+        },
+        handler: verifyFaceHandler,
     },
     {
         method: 'POST',

@@ -122,6 +122,49 @@
     "error": false
 }
 ```
+### Upload Face Customer Verification
+
+- **URL**: `/upload-face`
+- **Method**: `POST`
+- **Auth required**: `YES`
+- **Role required**: `Customer`
+- **Request Header**:
+  - `Content-Type` : `multipart/form-data`
+- **Request Body**:
+  - `verification_image` as `file` - `File Face Customer`
+- **Response**:
+
+```json
+{
+    "status": 201,
+    "message": "Model uploaded successfully",
+    "error": false
+}
+```
+### Verify Face Customer Verification
+
+- **URL**: `/verify-face`
+- **Method**: `POST`
+- **Auth required**: `YES`
+- **Role required**: `Customer`
+- **Request Header**:
+  - `Content-Type` : `multipart/form-data`
+- **Request Body**:
+  - `input_image` as `file` - `File Face Customer`
+- **Response**:
+
+```json
+{
+    "status": 200,
+    "message": "Model predicted successfully",
+    "data": {
+        "threshold": 0.1981,
+        "verification_score": 0,
+        "verified": true
+    },
+    "error": false
+}
+```
 ### Validate Title With Model NLP
 
 - **URL**: `/customer/validate/jobs`
