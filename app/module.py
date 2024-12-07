@@ -9,6 +9,7 @@ import os
 import cv2
 import numpy as np
 import pickle
+import json
 
 def allowed_file_extension(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in Config.ALLOWED_EXTENSIONS
