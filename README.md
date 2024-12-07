@@ -1,8 +1,6 @@
-
 <p align="center">
   <img src="image/serabutinn.png" alt="SerabutInn logo" height="180" />
 </p>
-
 
 # Backend Model FACE RECOGNITION API SerabutInn
 > Capstone Project C242-PR580
