@@ -2,7 +2,6 @@
   <img src="image/serabutinn.png" alt="SerabutInn logo" height="180" />
 </p>
 
-
 # WEB Server API SerabutInn
 > Capstone Project C242-PR580
 
