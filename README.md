@@ -124,7 +124,7 @@
 ```
 ### Upload Face Customer Verification
 
-- **URL**: `/upload-face`
+- **URL**: `/customer/upload-face`
 - **Method**: `POST`
 - **Auth required**: `YES`
 - **Role required**: `Customer`
@@ -143,7 +143,7 @@
 ```
 ### Verify Face Customer Verification
 
-- **URL**: `/verify-face`
+- **URL**: `/customer/verify-face`
 - **Method**: `POST`
 - **Auth required**: `YES`
 - **Role required**: `Customer`
