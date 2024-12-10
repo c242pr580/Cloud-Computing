@@ -17,15 +17,6 @@ const updateMitraDataHandler = async (request, h) => {
 
         const { business_name, business_address } = request.payload;
 
-        if (!business_name || !business_address) {
-            const boomError = Boom.badRequest('Please provide all required fields.');
-            return h.response({
-                status: boomError.output.statusCode,
-                message: boomError.message,
-                error: true,
-            }).code(boomError.output.statusCode);
-        }
-        
         const allowedParams = ['business_name', 'business_address'];
         const payloadKeys = Object.keys(request.payload);
         const invalidParams = payloadKeys.filter((key) => !allowedParams.includes(key));
@@ -40,8 +31,8 @@ const updateMitraDataHandler = async (request, h) => {
         }
 
         await mitrasService.updateMitraData(mitra.mitra_id, {
-            business_name,
-            business_address,
+            business_name: business_name || mitra.business_name,
+            business_address: business_address || mitra.business_address,
             transaction_done: mitra.transaction_done || '0',
             rating: mitra.rating || '0',
         });

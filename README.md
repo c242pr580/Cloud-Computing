@@ -453,7 +453,7 @@
 - **Method**: `POST`
 - **Auth required**: `YES`
 - **Role required**: `Mitra`
-- **Request Body**:
+- **Request Body (Optional)**:
   - `business_name` as `string` - `Name A Mitra`
   - `business_address` as `string` - `Address A Mitra`
 - **Response**:
